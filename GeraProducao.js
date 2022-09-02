@@ -1,3 +1,4 @@
+var recImposto = newJava("br.com.sankhya.modelcore.comercial.impostos.ImpostosHelpper");
 var qtdKitProducao = getParam("QTDKITPROD");
 var simpleDateFormat = newJava("java.text.SimpleDateFormat");
 simpleDateFormat.applyPattern("dd/MM/yyyy");
@@ -103,6 +104,10 @@ for(var i = 0; i < linhas.length; i++){
     registroProdutoMP.setCampo("VLRTOT", registroProdutoMP.getCampo("VLRUNIT") * registroProdutoMP.getCampo("QTDNEG"));
      
     registroProdutoMP.save();
+
+    recImposto.setForcarRecalculo(true);
+    recImposto.calcularImpostos(registroProdutoMP.getCampo("NUNOTA"));
+
     }
     var totalItens = getQuery();
     totalItens.nativeSelect("SELECT SUM(VLRTOT) AS VLRTOT FROM TGFITE WHERE NUNOTA = " + registroProdutoMP.getCampo("NUNOTA"));
@@ -163,9 +168,13 @@ for(var i = 0; i < linhas.length; i++){
         registroProdutoPA.setCampo("CODVOL", produtoAcabado.getString("CODVOL"));
         registroProdutoPA.save();    
         
+        recImposto.setForcarRecalculo(true);
+        recImposto.calcularImpostos(registroProdutoPA.getCampo("NUNOTA"));
+        
     } 
     produtoAcabado.close();
     produtosAlternativos.close(); 
+
 
   mensagem = 'Registros criado com sucesso!\n' + 
              'Nro Único pedido de Venda ' + notaProdutoMP.getCampo("NUNOTA")  
