@@ -148,6 +148,7 @@ for(var i = 0; i < linhas.length; i++){
         notaProdutoPA.setCampo("CODTIPVENDA", 100);
         notaProdutoPA.setCampo("OBSERVACAO", "ENTRADA SIMBOLICA PARA TROCA DE UNIDADE DE MEDIDA REF");
         notaProdutoPA.setCampo("VLRNOTA", totalItensConvert);
+        notaProdutoPA.setCampo("AD_NUNOTAORIGEM", notaProdutoMP.getCampo("NUNOTA"));
         notaProdutoPA.save();
 
         var registroProdutoPA = novaLinha("TGFITE");
