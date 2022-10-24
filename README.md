@@ -35,6 +35,11 @@ Estas são algumas das ferramentas utilizadas na empresa atualmente, tem como o 
   <td>Excluir Ocorrências de Rastreio</td>
   <td>Algumas notas fiscais não vão ter ocorrências automáticas de rastreio, sendo assim, foi necessário implementar um botão para que possa ser feito a inclusão manualmente, sendo assim, é necessário excluir também. 
 </tr>
+<tr>
+  <td><a href="https://github.com/EDUARDO-TEIXEIRA/Personalizacao-CIVITT/blob/main/Cont%C3%A1bil-Fiscal/AjusteValorDI.js">CVT-004</a></td>
+  <td>Ajuste Valor DI</td>
+  <td>Com a importação notas fiscais de origem internacional, é necessário realizar o cálculo do valor da DI por NCM, sendo assim, foi necessário adicionar um campo para poder realizar o cálculo corretamente.</td>
+</tr>
 
 </table>
 
