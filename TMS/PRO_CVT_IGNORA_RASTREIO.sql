@@ -4,11 +4,12 @@ create or replace PROCEDURE "PRO_CVT_IGNORA_RASTREIO" (
        P_QTDLINHAS NUMBER,    
        P_MENSAGEM OUT VARCHAR2 
 ) AS
-       FIELD_CHNFE      NUMBER;   
+       FIELD_CHNFE      VARCHAR2(44);   
        FIELD_SEQOCOR    INT;
 
 BEGIN       
        FIELD_CHNFE     := ACT_TXT_FIELD(P_IDSESSAO,1,  'CHNFE');
+       
 
        IF NVL(FIELD_CHNFE, '') = '' THEN
         RAISE_APPLICATION_ERROR(-20000, FC_FORMATAHTML('Alteração de Registro - Operação não permitida',
