@@ -1,5 +1,8 @@
 package br.UtilitariosSankhya;
 
-public class CabecalhoNota {
-	
+import java.math.BigDecimal;
+
+public class Financeiro {
+	private BigDecimal nufin;
+	private BigDecimal vlrdesdob;
 }

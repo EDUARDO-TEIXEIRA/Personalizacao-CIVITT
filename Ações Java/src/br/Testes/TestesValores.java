@@ -28,8 +28,8 @@ import org.xml.sax.SAXException;
 public class TestesValores {
 	 
 	  public  static  void  main ( String args []) throws Exception  
-	    { 
-		  inclusaoSerasa();
+	    {  	        
+          operacaoSerasa();
 	    } 
 	  private void manipulandoXML() throws TransformerException {
 	  DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -68,13 +68,12 @@ public class TestesValores {
 			e.printStackTrace();
 		}
 	  }
-	  public static String inclusaoSerasa() throws Exception {
-			URL url = new URL("https://treina.spc.org.br/spc/remoting/ws/insumo/spc/spcWebService?wsdl");
+	  public static void operacaoSerasa() throws Exception {
+			URL url = new URL("https://treina.spc.org.br/spc/remoting/ws/insumo/spc/spcWebService?wsdl\"");
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+			String requestBodyXML = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:web=\"http://webservice.spc.insumo.spcjava.spcbrasil.org/\"> <soapenv:Header/> <soapenv:Body> <web:incluirSpc> <insumoSpc> <tipo-pessoa>J</tipo-pessoa> <dados-pessoa-juridica> <cnpj numero=\"17262755000167\"/> <razao-social> PR LUNA DE AZEVEDO FILHO </razao-social> <nome-comercial>RB DISTRIBUIDORA</nome-comercial> </dados-pessoa-juridica> <data-compra>2022-02-24T00:00:00</data-compra> <data-vencimento>2022-10-12T00:00:00</data-vencimento> <codigo-tipo-devedor>C</codigo-tipo-devedor> <numero-contrato>17262755000167C939798</numero-contrato> <valor-debito> 1433.98</valor-debito> <natureza-inclusao> <id>1</id> </natureza-inclusao> <endereco-pessoa> <cep>-64000080</cep> <logradouro>001 DISTRITO INDUSTRIAL</logradouro> <bairro>DISTRITO INDUSTRIAL</bairro> <numero>1411</numero> </endereco-pessoa> </insumoSpc> </web:incluirSpc> </soapenv:Body> </soapenv:Envelope>";
 			StringBuffer response = new StringBuffer();
 			String inputLine = "";
-			String requestBodyXML;
-			
 			//connection.setRequestProperty("Content-Type", "application/xml");
 			connection.setRequestMethod("POST");
 			connection.setRequestProperty("Authorization", "Basic NzI2NTkzMjpXUzA4MTEyMDIy");
@@ -83,32 +82,41 @@ public class TestesValores {
 			connection.setRequestProperty("User-Agent", "PostmanRuntime/7.29.2");
 			connection.setRequestProperty("Accept", "application/xml?");
 			connection.setRequestProperty("Connection", "keep-alive");
-			//connection.setRequestProperty("Content-Type", "text/xml charset=utf-8");
+			connection.setRequestProperty("Content-Type", "text/xml charset=utf-8");
 			
 			connection.setDoOutput(true);
-	        // Inclusão	        
-	        requestBodyXML = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:web=\"http://webservice.spc.insumo.spcjava.spcbrasil.org/\"> <soapenv:Header/> <soapenv:Body> <web:incluirSpc> <insumoSpc> <tipo-pessoa>J</tipo-pessoa> <dados-pessoa-juridica> <cnpj numero=\"17262755000167\"/> <razao-social>ASSOCIACAO DE CONTRIBUICAO SOCIAL DO BRASIL</razao-social> <nome-comercial>ASSOCIADOS PATRIARCA</nome-comercial> </dados-pessoa-juridica> <data-compra>2014-02-01T21:02:14</data-compra> <data-vencimento>2022-08-22T21:02:14</data-vencimento> <codigo-tipo-devedor>C</codigo-tipo-devedor> <numero-contrato>000044270415</numero-contrato> <valor-debito>100.00</valor-debito> <natureza-inclusao> <id>1</id> </natureza-inclusao> <endereco-pessoa> <cep>-11740000</cep> <logradouro>Avenida Condessa</logradouro> <bairro>Centro</bairro> <numero>999</numero> </endereco-pessoa> </insumoSpc> </web:incluirSpc> </soapenv:Body> </soapenv:Envelope>"; 
-	        // Exclusao
-	        //requestBodyXML = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:web=\"http://webservice.spc.insumo.spcjava.spcbrasil.org/\"> <soapenv:Header/> <soapenv:Body> <web:excluirSpc> <excluir> <tipo-pessoa>J</tipo-pessoa> <dados-pessoa-juridica> <cnpj numero=\"17262755000167\"/> <razao-social>ASSOCIACAO DE CONTRIBUICAO SOCIAL DO BRASIL</razao-social> <nome-comercial>ASSOCIADOS PATRIARCA</nome-comercial> </dados-pessoa-juridica> <data-vencimento>2022-08-22T21:02:14</data-vencimento> <numero-contrato>45CCH888888CCC</numero-contrato> <motivo-exclusao> <id>1</id> </motivo-exclusao> </excluir> </web:excluirSpc> </soapenv:Body> </soapenv:Envelope>";        
+			connection.setReadTimeout(30000);
+	        connection.setConnectTimeout(30000);
+	                
 	        DataOutputStream wr = new DataOutputStream(connection.getOutputStream());
 	        wr.writeBytes(requestBodyXML);
 	        wr.flush();
 	        wr.close();
-	        wr.close();
 
 			try {
+				int responseCode = connection.getResponseCode();
+
 				BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream(), "utf-8"));
-				while ((inputLine = in.readLine()) != null) {
+				 while ((inputLine = in.readLine()) != null) {
 					 response.append(inputLine);
 				 }
-				 in.close();
 				 
-				 return response.toString();
-				
+				 in.close();
+				System.out.println("Resposta: " + connection.getResponseMessage());
 			} catch (Exception erro) {
-				throw new Exception("ERRO durante a execução do envio dos dados ao Serasa!" + connection.getResponseCode() + "<br/>"
-	    				   		  	+ erro.toString() + "<br/>" + response.toString() + connection.getErrorStream());
-	    		
+				 BufferedReader in = new BufferedReader(new InputStreamReader(connection.getErrorStream(), "utf-8"));
+				 String returnAPISOAP = in.readLine();
+	             int inicio = returnAPISOAP.indexOf("<faultcode>");
+	 	         int fim = returnAPISOAP.indexOf("</faultcode>");
+	 	         String resultado = returnAPISOAP.substring(inicio + 11, fim);
+	 	         inicio = returnAPISOAP.indexOf("<faultstring>");
+	 	         fim = returnAPISOAP.indexOf("</faultstring>");
+	 	         
+	 	         resultado += "-" + returnAPISOAP.substring(inicio + 13, fim);
+	 	         
+	 	         System.out.println(resultado);
+
+				 
 			} finally {
 				connection.disconnect();
 			}

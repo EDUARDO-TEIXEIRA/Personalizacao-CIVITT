@@ -15,6 +15,7 @@ import java.util.Collection;
 
 import com.sankhya.util.TimeUtils;
 
+import br.UtilitariosSankhya.MensagemRetorno;
 import br.com.sankhya.jape.EntityFacade;
 import br.com.sankhya.jape.bmp.PersistentLocalEntity;
 import br.com.sankhya.jape.dao.JdbcWrapper;
@@ -27,13 +28,20 @@ import br.com.sankhya.modelcore.util.DynamicEntityNames;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 
 public class IntegracaoSankhyaSerasa {
+	MensagemRetorno msg = new MensagemRetorno();
 	public EntityFacade dwf;
 	public JdbcWrapper jdbc = null;
 	
 	private BigDecimal codEmpresaOperador;
-	private String xmlBody; 
+	private String xmlBody;
+	private String xmlReturn;
 	
-	
+	public String getXmlReturn() {
+		return xmlReturn;
+	}
+	public void setXmlReturn(String xmlReturn) {
+		this.xmlReturn = xmlReturn;
+	}
 	public String getXmlBody() {
 		return xmlBody;
 	}
@@ -54,9 +62,12 @@ public class IntegracaoSankhyaSerasa {
 			String filtroSQL = "NUFIN = " + nufin +  " AND CODOPERACAO = '" + operacao + "'";
 			FinderWrapper buscaRegistro = new FinderWrapper("AD_LOGSERASA", filtroSQL);
 			Collection<PersistentLocalEntity> logVO = dwf.findByDynamicFinder(buscaRegistro);
+			
 			if (!logVO.isEmpty()) {
 				throw new Exception("O registro de número único " + nufin + " já foi processado ao Serasa.");
 			}
+			
+			
 		} catch (Exception e) {
 		      MGEModelException.throwMe(e);
 		}
@@ -108,6 +119,7 @@ public class IntegracaoSankhyaSerasa {
 	}
 	
 	public void operacaoSerasa() throws Exception {
+		
 		URL url = new URL(getURLSerasa() );
 		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 		StringBuffer response = new StringBuffer();
@@ -130,7 +142,6 @@ public class IntegracaoSankhyaSerasa {
         wr.writeBytes(this.xmlBody);
         wr.flush();
         wr.close();
-        wr.close();
 
 		try {
 			int responseCode = connection.getResponseCode();
@@ -145,12 +156,19 @@ public class IntegracaoSankhyaSerasa {
 				 response.append(inputLine);
 			 }
 			 in.close();
+		     xmlReturn = in.readLine(); 
 			
 		} catch (Exception erro) {
-			throw new Exception("<br>Cód. Resposta Servidor: " + connection.getResponseCode() + "<br/>"
-    				   		  	+ erro.toString() + "<br/>" + response.toString() 
-    				   		  	+ connection.getErrorStream() 
-    				   		  	+ "<br/>" + xmlBody);
+			BufferedReader in = new BufferedReader(new InputStreamReader(connection.getErrorStream(), "utf-8"));
+			String resultado = in.readLine();
+			int inicio = resultado.indexOf("<faultcode>");
+	         int fim = resultado.indexOf("</faultcode>");
+	         xmlReturn  = resultado.substring(inicio + 11, fim);
+	         inicio = resultado.indexOf("<faultstring>");
+	         fim = resultado.indexOf("</faultstring>");
+			
+	        xmlReturn += "-" + resultado.substring(inicio + 13, fim);
+	        msg.exibirErro("Operação interrompida", resultado, null);
     		
 		} finally {
 			connection.disconnect();
@@ -169,6 +187,7 @@ public class IntegracaoSankhyaSerasa {
             logVo.setProperty("CODPARC", codParc);
             logVo.setProperty("CODUSU", codUsuLogado);
             logVo.setProperty("XML", xmlBody.toCharArray());
+            logVo.setProperty("RETURNAPI", xmlReturn);
 
             PersistentLocalEntity createEntity = dwf.createEntity("AD_LOGSERASA", (EntityVO) logVo);
             DynamicVO save = (DynamicVO) createEntity.getValueObject();
@@ -176,7 +195,7 @@ public class IntegracaoSankhyaSerasa {
             System.out.println("Log de inclusão do serasa gravado com sucesso!");
 
         } catch (Exception erro){
-        	throw new Exception("Não foi possível gravar o log da inclusão do serasa." + erro.toString());
+        	msg.exibirErro("Não foi possível gravar o log da inclusão do serasa." + erro.toString(), null, null);
         }
         
         finally {

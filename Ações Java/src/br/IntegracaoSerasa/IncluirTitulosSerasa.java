@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.concurrent.TimeUnit;
 
+import br.UtilitariosSankhya.MensagemRetorno;
 import br.com.sankhya.extensions.actionbutton.AcaoRotinaJava;
 import br.com.sankhya.extensions.actionbutton.ContextoAcao;
 import br.com.sankhya.extensions.actionbutton.Registro;
@@ -18,11 +19,13 @@ import br.com.sankhya.jape.dao.JdbcWrapper;
 import br.com.sankhya.jape.sql.NativeSql;
 import br.com.sankhya.jape.util.FinderWrapper;
 import br.com.sankhya.jape.vo.DynamicVO;
+import br.com.sankhya.modelcore.dwfdata.vo.tgf.FinanceiraVO;
 import br.com.sankhya.modelcore.util.DynamicEntityNames;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 
 
 public class IncluirTitulosSerasa implements AcaoRotinaJava{
+	MensagemRetorno msg = new MensagemRetorno();
 	private BigDecimal nuNota;
 	private BigDecimal numNota ;
 	private BigDecimal nuFin;
@@ -49,8 +52,9 @@ public class IncluirTitulosSerasa implements AcaoRotinaJava{
 		this.codUsuLogado = contexto.getUsuarioLogado();
 		
 		Registro[] linhas = contexto.getLinhas();
-		if (linhas.length == 0) {
-			contexto.setMensagemRetorno("Operação inválida! Nenhuma linha selecionada!");
+		
+		if (linhas.length == 0 ) {
+			msg.exibirErro("Operação inválida","Selecione uma linha", null);
 		}
 		
 		for (Registro linha : linhas) 
@@ -71,14 +75,14 @@ public class IncluirTitulosSerasa implements AcaoRotinaJava{
 			
 			
 			if (linha.getCampo("PROVISAO").equals("S")) {
-				throw new Exception("Não é possível enviar provisões ao Serasa");
+				msg.exibirErro("Operação Interrompida", "Não é possível enviar provisões ao Serasa", null);
 			} else if (((BigDecimal) linha.getCampo("RECDESP")).intValue() != 1) {
-				throw new Exception("Não é possível enviar despesas ou provisões ao Serasa ");
-			} else if(diffDias <= 15) {
-				throw new Exception("O registro de número único " + nuFin + " não pode ser enviado pois possui menos de 15 dias de vencimento");
-			} else if(linha.getCampo("AD_SERASA") != null ) {
+				msg.exibirErro("Operação Interrompida", "Não é possível enviar despesas ou provisões ao Serasa", null);
+			} 
+			/*else if(diffDias <= 15) { throw new Exception("O registro de número único " + nuFin + " não pode ser enviado pois possui menos de 15 dias de vencimento"); */			
+				else if(linha.getCampo("AD_SERASA") != null ) {
 				if (linha.getCampo("AD_SERASA").equals("S")) {
-					throw new Exception("O registro de número único " + nuFin + " já foi enviado ao Serasa.");
+					msg.exibirErro("Operação interrompida", "O registro de número único " + nuFin + " já foi enviado ao Serasa.", null);
 				}
 			} else if(linha.getCampo("DHBAIXA") != null && linha.getCampo("CODTIPOPERBAIXA") != "0") {
 				throw new Exception("O registro número único " + nuFin + " já foi baixado e não pode ser enviado ao Serasa.");
@@ -91,7 +95,7 @@ public class IncluirTitulosSerasa implements AcaoRotinaJava{
 			final boolean confirmaOperacao = contexto.confirmarSimNao("Deseja continuar?", "Foram selecionado (s) " + linhas.length + " registro (s) para enviar ao Serasa.", 0);
 			
 			if (confirmaOperacao) {
-				String numContrato = this.cgc_cpf + "C"+ this.nuFin;
+				BigDecimal numContrato = this.numNota;
 				this.xmlRequest = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:web=\"http://webservice.spc.insumo.spcjava.spcbrasil.org/\"> <soapenv:Header/> <soapenv:Body> <web:incluirSpc> <insumoSpc> <tipo-pessoa>J</tipo-pessoa> <dados-pessoa-juridica> <cnpj numero=\"" + this.cgc_cpf + "\"/> <razao-social> " + this.razaoSocial +  " </razao-social> <nome-comercial>" + this.nomeFantasia + "</nome-comercial> </dados-pessoa-juridica> <data-compra>" + linha.getCampo("DTNEG") + "T00:00:00" + "</data-compra> <data-vencimento>" +linha.getCampo("DTVENC") + "T00:00:00" + "</data-vencimento> <codigo-tipo-devedor>C</codigo-tipo-devedor> <numero-contrato>" + numContrato + "</numero-contrato> <valor-debito> " + linha.getCampo("VLRDESDOB") + "</valor-debito> <natureza-inclusao> <id>1</id> </natureza-inclusao> <endereco-pessoa> <cep>-" + this.cep+ "</cep> <logradouro>" +this.logradouro +"</logradouro> <bairro>" + this.nomeBairro + "</bairro> <numero>" + this.numEndereco + "</numero> </endereco-pessoa> </insumoSpc> </web:incluirSpc> </soapenv:Body> </soapenv:Envelope>";
 				integracao();
 				contexto.setMensagemRetorno("Dados enviados com sucesso!");
@@ -196,7 +200,6 @@ public class IncluirTitulosSerasa implements AcaoRotinaJava{
 		integrador.setCodEmpresaOperador(this.codEmp);
 		integrador.operacaoSerasa();
 		integrador.inserirLog(this.nuFin, this.codParc, this.codUsuLogado, "I");
-		
-	}
+		}
 }
 		

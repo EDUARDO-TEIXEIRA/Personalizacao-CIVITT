@@ -1,25 +1,20 @@
 package br.IntegracaoSerasa;
 
 import java.math.BigDecimal;
-import java.sql.ResultSet;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.concurrent.TimeUnit;
+import br.UtilitariosSankhya.*;
 
 import br.com.sankhya.extensions.actionbutton.AcaoRotinaJava;
 import br.com.sankhya.extensions.actionbutton.ContextoAcao;
 import br.com.sankhya.extensions.actionbutton.Registro;
 import br.com.sankhya.jape.EntityFacade;
-import br.com.sankhya.jape.core.JapeSession;
-import br.com.sankhya.jape.core.JapeSession.SessionHandle;
-import br.com.sankhya.jape.dao.JdbcWrapper;
 import br.com.sankhya.jape.sql.NativeSql;
 import br.com.sankhya.jape.util.FinderWrapper;
 import br.com.sankhya.jape.vo.DynamicVO;
-import br.com.sankhya.jape.wrapper.JapeWrapper;
-import br.com.sankhya.modelcore.MGEModelException;
 import br.com.sankhya.modelcore.util.DynamicEntityNames;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 
@@ -39,15 +34,19 @@ public class RemoveTitulosSerasa implements AcaoRotinaJava{
 	private EntityFacade dwf;
 	private StringBuffer mensagem;
 	String xmlRequest = "";
-	
+	MensagemRetorno msg = new MensagemRetorno();
 	
 	@Override
 	public void doAction(final ContextoAcao contexto) throws Exception {
+		
+		
+		
 		this.codUsuLogado = contexto.getUsuarioLogado();
 		
 		Registro[] linhas = contexto.getLinhas();
-		if (linhas.length == 0) {
-			contexto.setMensagemRetorno("Operação inválida! Nenhuma linha selecionada!");
+				
+		if (linhas.length == 0 ) {
+			msg.exibirErro("Operação inválida","Selecione uma linha", null);
 		}
 		
 		for (Registro linha : linhas) 
@@ -67,23 +66,23 @@ public class RemoveTitulosSerasa implements AcaoRotinaJava{
 			this.codEmp = (BigDecimal) linha.getCampo("CODEMP");
 			
 			if (linha.getCampo("PROVISAO").equals("S")) {
-				throw new Exception("Não é possível enviar provisões ao Serasa");
+				msg.exibirErro("ERRO AO PROCESSAR DADOS", "Não é possível enviar provisões ao Serasa", null);
 			} else if (((BigDecimal) linha.getCampo("RECDESP")).intValue() != 1) {
-				throw new Exception("Não é possível enviar despesas ou provisões ao Serasa ");
+				msg.exibirErro("ERRO AO PROCESSAR DADOS", "Não é possível enviar despesas ou provisões ao Serasa ", null);
 			} else if(linha.getCampo("AD_SERASA") == null) {
-				throw new NullPointerException("O título não pode ser excluído pois não foi enviado ao Serasa");
+				msg.exibirErro("ERRO AO PROCESSAR DADOS", "O registro não foi enviado ao Serasa.", null);
 			} else if (linha.getCampo("AD_SERASA").equals("N")) {
-				throw new Exception("O registro não foi enviado ao Serasa.");
+				msg.exibirErro("ERRO AO PROCESSAR DADOS", "O registro não foi enviado ao Serasa.", null);
 			} else if(linha.getCampo("DHBAIXA") != null && linha.getCampo("CODTIPOPERBAIXA") != "0") {
-				throw new Exception("O registro número único " + nuFin + " já foi baixado e não pode ser enviado ao Serasa.");
+				msg.exibirErro("ERRO AO PROCESSAR DADOS", "O registro número único " + nuFin + " já foi baixado e não pode ser enviado ao Serasa.", null);
 			} 	
 			
 			final boolean confirmaOperacao = contexto.confirmarSimNao("Deseja continuar?", "Foram selecionado (s) " + linhas.length + " registro (s) para enviar ao Serasa.", 0);
 			
 			if (confirmaOperacao) {
 				getBuscaParceiro(this.codParc);
-				String numContrato = this.cgc_cpf + "C"+ this.nuFin;
-			   this.xmlRequest = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:web=\"http://webservice.spc.insumo.spcjava.spcbrasil.org/\"> <soapenv:Header/> <soapenv:Body> <web:excluirSpc> <excluir> <tipo-pessoa>J</tipo-pessoa> <dados-pessoa-juridica> <cnpj numero=\"" + this.cgc_cpf + "\"/> <razao-social>" + this.razaoSocial + "</razao-social> <nome-comercial>" + this.nomeFantasia+ "</nome-comercial> </dados-pessoa-juridica> <data-vencimento>"+linha.getCampo("DTVENC") + "T00:00:00" + "</data-vencimento> <numero-contrato>" + numContrato + "</numero-contrato> <motivo-exclusao> <id>1</id> </motivo-exclusao> </excluir> </web:excluirSpc> </soapenv:Body> </soapenv:Envelope>"; 
+				BigDecimal numContrato = this.numNota;
+			    this.xmlRequest = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:web=\"http://webservice.spc.insumo.spcjava.spcbrasil.org/\"> <soapenv:Header/> <soapenv:Body> <web:excluirSpc> <excluir> <tipo-pessoa>J</tipo-pessoa> <dados-pessoa-juridica> <cnpj numero=\"" + this.cgc_cpf + "\"/> <razao-social>" + this.razaoSocial + "</razao-social> <nome-comercial>" + this.nomeFantasia+ "</nome-comercial> </dados-pessoa-juridica> <data-vencimento>"+linha.getCampo("DTVENC") + "T00:00:00" + "</data-vencimento> <numero-contrato>" + numContrato + "</numero-contrato> <motivo-exclusao> <id>1</id> </motivo-exclusao> </excluir> </web:excluirSpc> </soapenv:Body> </soapenv:Envelope>"; 
 			    integracao();
 			    contexto.setMensagemRetorno("Dados excluídos com sucesso!");
 				linha.setCampo("AD_SERASA", "N");
@@ -97,8 +96,12 @@ public class RemoveTitulosSerasa implements AcaoRotinaJava{
 		integrador.getValidaEnvioSerasa(codUsuLogado);		
 		integrador.setCodEmpresaOperador(this.codEmp);
 		integrador.validaRegistroLog(this.nuFin, "E");
-		integrador.inserirLog(this.nuFin, this.codParc, this.codUsuLogado, "E");
-		integrador.operacaoSerasa();
+		try {
+			integrador.operacaoSerasa();
+			integrador.inserirLog(this.nuFin, this.codParc, this.codUsuLogado, "E");	
+		} catch (Exception e) {
+			integrador.inserirLog(this.nuFin, this.codParc, this.codUsuLogado, "00");
+		}
 		}
 	
 	private void getBuscaParceiro(BigDecimal codParceiro) throws Exception {
