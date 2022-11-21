@@ -71,10 +71,10 @@ public class TestesValores {
 	  public static void operacaoSerasa() throws Exception {
 			URL url = new URL("https://treina.spc.org.br/spc/remoting/ws/insumo/spc/spcWebService?wsdl\"");
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-			String requestBodyXML = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:web=\"http://webservice.spc.insumo.spcjava.spcbrasil.org/\"> <soapenv:Header/> <soapenv:Body> <web:incluirSpc> <insumoSpc> <tipo-pessoa>J</tipo-pessoa> <dados-pessoa-juridica> <cnpj numero=\"17262755000167\"/> <razao-social> PR LUNA DE AZEVEDO FILHO </razao-social> <nome-comercial>RB DISTRIBUIDORA</nome-comercial> </dados-pessoa-juridica> <data-compra>2022-02-24T00:00:00</data-compra> <data-vencimento>2022-10-12T00:00:00</data-vencimento> <codigo-tipo-devedor>C</codigo-tipo-devedor> <numero-contrato>17262755000167C939798</numero-contrato> <valor-debito> 1433.98</valor-debito> <natureza-inclusao> <id>1</id> </natureza-inclusao> <endereco-pessoa> <cep>-64000080</cep> <logradouro>001 DISTRITO INDUSTRIAL</logradouro> <bairro>DISTRITO INDUSTRIAL</bairro> <numero>1411</numero> </endereco-pessoa> </insumoSpc> </web:incluirSpc> </soapenv:Body> </soapenv:Envelope>";
+			//String requestBodyXML = "<?xml version='1.0' encoding='UTF-8'?> <S:Envelope xmlns:S=\"http://schemas.xmlsoap.org/soap/envelope/\"> <S:Body> <ns2:Fault xmlns:ns2=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ns3=\"http://www.w3.org/2003/05/soap-envelope\"> <faultcode>IE_SPC005.E10</faultcode> <faultstring>Registro não encontrado para a exclusão</faultstring> </ns2:Fault> </S:Body> </S:Envelope>";
+			String requestBodyXML = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:web=\"http://webservice.spc.insumo.spcjava.spcbrasil.org/\"> <soapenv:Header/> <soapenv:Body> <web:excluirSpc> <excluir> <tipo-pessoa>J</tipo-pessoa> <dados-pessoa-juridica> <cnpj numero=\"17262755000167\"/> <razao-social>PR LUNA DE AZEVEDO FILHO</razao-social> <nome-comercial>RB DISTRIBUIDORA</nome-comercial> </dados-pessoa-juridica> <data-vencimento>2022-11-01T00:00:00</data-vencimento> <numero-contrato>97803</numero-contrato> <motivo-exclusao> <id>1</id> </motivo-exclusao> </excluir> </web:excluirSpc> </soapenv:Body> </soapenv:Envelope>";
 			StringBuffer response = new StringBuffer();
 			String inputLine = "";
-			//connection.setRequestProperty("Content-Type", "application/xml");
 			connection.setRequestMethod("POST");
 			connection.setRequestProperty("Authorization", "Basic NzI2NTkzMjpXUzA4MTEyMDIy");
 			connection.setRequestProperty("Content-Length", "<calculated when request is sent>");
@@ -97,24 +97,23 @@ public class TestesValores {
 				int responseCode = connection.getResponseCode();
 
 				BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream(), "utf-8"));
-				 while ((inputLine = in.readLine()) != null) {
-					 response.append(inputLine);
-				 }
+				 System.out.println(in.readLine());
 				 
 				 in.close();
 				System.out.println("Resposta: " + connection.getResponseMessage());
 			} catch (Exception erro) {
-				 BufferedReader in = new BufferedReader(new InputStreamReader(connection.getErrorStream(), "utf-8"));
-				 String returnAPISOAP = in.readLine();
-	             int inicio = returnAPISOAP.indexOf("<faultcode>");
-	 	         int fim = returnAPISOAP.indexOf("</faultcode>");
-	 	         String resultado = returnAPISOAP.substring(inicio + 11, fim);
-	 	         inicio = returnAPISOAP.indexOf("<faultstring>");
-	 	         fim = returnAPISOAP.indexOf("</faultstring>");
+				BufferedReader in = new BufferedReader(new InputStreamReader(connection.getErrorStream(), "utf-8"));
+				String resultado = in.readLine();
+				 String xmlReturn = ""; 
+				int inicio = resultado.indexOf("<faultcode>");
+		         int fim = resultado.indexOf("</faultcode>");
+		         xmlReturn  = resultado.substring(inicio + 11, fim);
+		         inicio = resultado.indexOf("<faultstring>");
+		         fim = resultado.indexOf("</faultstring>");
 	 	         
-	 	         resultado += "-" + returnAPISOAP.substring(inicio + 13, fim);
+		         xmlReturn += "-" + resultado.substring(inicio + 13, fim);
 	 	         
-	 	         System.out.println(resultado);
+	 	         System.out.println(xmlReturn);
 
 				 
 			} finally {

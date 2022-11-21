@@ -13,35 +13,38 @@ import java.sql.ResultSet;
 import java.util.Base64;
 import java.util.Collection;
 
+import javax.swing.JOptionPane;
+import javax.swing.Spring;
+
 import com.sankhya.util.TimeUtils;
 
-import br.UtilitariosSankhya.MensagemRetorno;
+import br.UtilitariosSankhya.MensagemRetornoUtil;
+import br.com.sankhya.extensions.actionbutton.ContextoAcao;
 import br.com.sankhya.jape.EntityFacade;
 import br.com.sankhya.jape.bmp.PersistentLocalEntity;
+import br.com.sankhya.jape.core.JapeSession;
+import br.com.sankhya.jape.core.JapeSession.SessionHandle;
 import br.com.sankhya.jape.dao.JdbcWrapper;
 import br.com.sankhya.jape.sql.NativeSql;
 import br.com.sankhya.jape.util.FinderWrapper;
 import br.com.sankhya.jape.vo.DynamicVO;
 import br.com.sankhya.jape.vo.EntityVO;
+import br.com.sankhya.jape.wrapper.JapeFactory;
 import br.com.sankhya.modelcore.MGEModelException;
+import br.com.sankhya.modelcore.comercial.IFBlock;
 import br.com.sankhya.modelcore.util.DynamicEntityNames;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 
 public class IntegracaoSankhyaSerasa {
-	MensagemRetorno msg = new MensagemRetorno();
+	MensagemRetornoUtil msg = new MensagemRetornoUtil();
 	public EntityFacade dwf;
 	public JdbcWrapper jdbc = null;
+	private String sucessoOperacao = "";
 	
 	private BigDecimal codEmpresaOperador;
 	private String xmlBody;
-	private String xmlReturn;
+	private String xmlReturn; 
 	
-	public String getXmlReturn() {
-		return xmlReturn;
-	}
-	public void setXmlReturn(String xmlReturn) {
-		this.xmlReturn = xmlReturn;
-	}
 	public String getXmlBody() {
 		return xmlBody;
 	}
@@ -59,14 +62,13 @@ public class IntegracaoSankhyaSerasa {
 		try 
 		{
 			this.dwf = EntityFacadeFactory.getDWFFacade();
-			String filtroSQL = "NUFIN = " + nufin +  " AND CODOPERACAO = '" + operacao + "'";
+			String filtroSQL = "NUFIN = " + nufin +  " AND CODOPERACAO IN ('" + operacao + "')";
 			FinderWrapper buscaRegistro = new FinderWrapper("AD_LOGSERASA", filtroSQL);
 			Collection<PersistentLocalEntity> logVO = dwf.findByDynamicFinder(buscaRegistro);
 			
 			if (!logVO.isEmpty()) {
-				throw new Exception("O registro de número único " + nufin + " já foi processado ao Serasa.");
+				msg.exibirErro("Operação cancelada","O registro de número único " + nufin + " já foi processado ao Serasa" , "Verifique o log para mais informações");
 			}
-			
 			
 		} catch (Exception e) {
 		      MGEModelException.throwMe(e);
@@ -118,13 +120,11 @@ public class IntegracaoSankhyaSerasa {
 		return url;	
 	}
 	
-	public void operacaoSerasa() throws Exception {
-		
+	public void operacaoSerasa(BigDecimal nufin, BigDecimal codParc, BigDecimal codUsuLogado, String operacao) throws Exception {
+
 		URL url = new URL(getURLSerasa() );
 		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 		StringBuffer response = new StringBuffer();
-		String inputLine = "";
-		//connection.setRequestProperty("Content-Type", "application/xml");
 		connection.setRequestMethod("POST");
 		connection.setRequestProperty("Authorization", "Basic " + getOperador(codEmpresaOperador));
 		connection.setRequestProperty("Content-Length", "<calculated when request is sent>");
@@ -137,69 +137,94 @@ public class IntegracaoSankhyaSerasa {
 		connection.setDoOutput(true);
 		connection.setReadTimeout(30000);
         connection.setConnectTimeout(30000);
-                
+		      
         DataOutputStream wr = new DataOutputStream(connection.getOutputStream());
         wr.writeBytes(this.xmlBody);
         wr.flush();
-        wr.close();
-
+        wr.close();        
 		try {
+			
 			int responseCode = connection.getResponseCode();
-
+			
 			BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream(), "utf-8"));
 			 if (responseCode == HttpURLConnection.HTTP_OK && 
 				 responseCode == HttpURLConnection.HTTP_CREATED || 
 				 responseCode == HttpURLConnection.HTTP_ACCEPTED) {
 				 throw new Exception("Erro de conexão, veja mais informações: ");
 			 }
-			 while ((inputLine = in.readLine()) != null) {
-				 response.append(inputLine);
-			 }
-			 in.close();
-		     xmlReturn = in.readLine(); 
 			
+			 
+		     xmlReturn = in.readLine();
+		     in.close();
+		     sucessoOperacao = operacao;
+		     
+		     inserirLog(nufin, codParc, codUsuLogado, sucessoOperacao);
+		     
 		} catch (Exception erro) {
 			BufferedReader in = new BufferedReader(new InputStreamReader(connection.getErrorStream(), "utf-8"));
 			String resultado = in.readLine();
-			int inicio = resultado.indexOf("<faultcode>");
-	         int fim = resultado.indexOf("</faultcode>");
-	         xmlReturn  = resultado.substring(inicio + 11, fim);
-	         inicio = resultado.indexOf("<faultstring>");
-	         fim = resultado.indexOf("</faultstring>");
+			xmlReturn = resultado;
 			
-	        xmlReturn += "-" + resultado.substring(inicio + 13, fim);
-	        msg.exibirErro("Operação interrompida", resultado, null);
-    		
+			sucessoOperacao = "00";
+			inserirLog(nufin, codParc, codUsuLogado, sucessoOperacao);
+	        in.close();
+	        
 		} finally {
 			connection.disconnect();
 		}
+		
 	}
-	public void inserirLog(BigDecimal nufin, BigDecimal codParc, BigDecimal codUsuLogado, String operacao) throws Exception  {
-        try {
-            this.dwf = EntityFacadeFactory.getDWFFacade();
-            DynamicVO logVo = (DynamicVO) this.dwf.getDefaultValueObjectInstance("AD_LOGSERASA");  
-            jdbc = dwf.getJdbcWrapper();
-            jdbc.openSession();
-            
-            logVo.setProperty("NUFIN", nufin);
-            logVo.setProperty("CODOPERACAO", operacao);
-            logVo.setProperty("DTALTERACAO",TimeUtils.getNow());
-            logVo.setProperty("CODPARC", codParc);
-            logVo.setProperty("CODUSU", codUsuLogado);
-            logVo.setProperty("XML", xmlBody.toCharArray());
-            logVo.setProperty("RETURNAPI", xmlReturn);
+	private void inserirLog(BigDecimal nufin, BigDecimal codParc, BigDecimal codUsuLogado, String operacao) throws Exception  {
 
-            PersistentLocalEntity createEntity = dwf.createEntity("AD_LOGSERASA", (EntityVO) logVo);
-            DynamicVO save = (DynamicVO) createEntity.getValueObject();
-            
-            System.out.println("Log de inclusão do serasa gravado com sucesso!");
+		try {	   	 
+	            this.dwf = EntityFacadeFactory.getDWFFacade();
+	            DynamicVO logVo = (DynamicVO) this.dwf.getDefaultValueObjectInstance("AD_LOGSERASA");  
+	            jdbc = dwf.getJdbcWrapper();
+	            jdbc.openSession();
+	            
+	            logVo.setProperty("NUFIN", nufin);
+	            logVo.setProperty("CODOPERACAO", operacao);
+	            logVo.setProperty("DTALTERACAO",TimeUtils.getNow());
+	            logVo.setProperty("CODPARC", codParc);
+	            logVo.setProperty("CODUSU", codUsuLogado);
+	            logVo.setProperty("XML", xmlBody.toCharArray());
+	            char [] xmlConvertido = xmlReturn.toCharArray();
+	            logVo.setProperty("RETURNAPI", xmlConvertido );
 
-        } catch (Exception erro){
-        	msg.exibirErro("Não foi possível gravar o log da inclusão do serasa." + erro.toString(), null, null);
-        }
-        
-        finally {
-            jdbc.closeSession();
-        }
-	}
+	            PersistentLocalEntity createEntity = dwf.createEntity("AD_LOGSERASA", (EntityVO) logVo);
+	            DynamicVO save = (DynamicVO) createEntity.getValueObject();
+	            
+	            System.out.println("Log de inclusão do serasa gravado com sucesso!");
+
+	            NativeSql updateFin = null;
+	            // Atualização do campo Serasa no Financeiro
+	            try {
+	            	String alteraSerasa = "";
+		            
+		            if (!sucessoOperacao.equals("00")) {
+		            	if (operacao.equals("I")) {
+		            		alteraSerasa = "S";
+						}else {
+							alteraSerasa = "N";
+						}
+		            	updateFin = new NativeSql(jdbc);
+				    	updateFin.setNamedParameter("P_OPERACAO", alteraSerasa);
+				    	updateFin.setNamedParameter("P_NUFIN", nufin);
+				    	updateFin.appendSql("UPDATE TGFFIN SET AD_SERASA = {P_OPERACAO} WHERE NUFIN = {P_NUFIN}");
+				    	
+				    	updateFin.executeQuery();		
+					}
+			    	
+				} catch (Exception e) {
+					
+				}
+
+	        } catch (Exception erro){
+	        	msg.exibirErro("Não foi possível gravar o log da inclusão do serasa." + erro.toString(), null, null);
+	        }
+	        
+	        finally {
+	            jdbc.closeSession();
+	        }
+		}
 }

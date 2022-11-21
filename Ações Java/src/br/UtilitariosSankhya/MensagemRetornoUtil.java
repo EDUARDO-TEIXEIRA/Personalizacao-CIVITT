@@ -1,8 +1,8 @@
 package br.UtilitariosSankhya;
 
 import br.com.sankhya.jape.PersistenceException;
-
-public class MensagemRetorno {
+public class MensagemRetornoUtil {
+		
 	public void exibirErro(String mensagem, String motivo, String solucao) throws Exception  {
 		String contexto = mensagem;
 		

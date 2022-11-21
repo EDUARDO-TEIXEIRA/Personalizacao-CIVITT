@@ -8,7 +8,8 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.concurrent.TimeUnit;
 
-import br.UtilitariosSankhya.MensagemRetorno;
+import br.UtilitariosSankhya.FinanceiroUtil;
+import br.UtilitariosSankhya.MensagemRetornoUtil;
 import br.com.sankhya.extensions.actionbutton.AcaoRotinaJava;
 import br.com.sankhya.extensions.actionbutton.ContextoAcao;
 import br.com.sankhya.extensions.actionbutton.Registro;
@@ -19,20 +20,14 @@ import br.com.sankhya.jape.dao.JdbcWrapper;
 import br.com.sankhya.jape.sql.NativeSql;
 import br.com.sankhya.jape.util.FinderWrapper;
 import br.com.sankhya.jape.vo.DynamicVO;
-import br.com.sankhya.modelcore.dwfdata.vo.tgf.FinanceiraVO;
 import br.com.sankhya.modelcore.util.DynamicEntityNames;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 
 
 public class IncluirTitulosSerasa implements AcaoRotinaJava{
-	MensagemRetorno msg = new MensagemRetorno();
-	private BigDecimal nuNota;
-	private BigDecimal numNota ;
-	private BigDecimal nuFin;
-	private BigDecimal valorDesdobramento;
-	
-	private BigDecimal codEmp ;
-	private BigDecimal codParc;
+	MensagemRetornoUtil msg = new MensagemRetornoUtil();
+	FinanceiroUtil financeiro = new FinanceiroUtil();
+		
 	private String cgc_cpf;
 	private String logradouro;
 	private BigDecimal numEndereco;
@@ -67,13 +62,12 @@ public class IncluirTitulosSerasa implements AcaoRotinaJava{
 	        Long difMillis = dtFinal.getTimeInMillis() - dtInicio.getTimeInMillis();
 	        Long diffDias = TimeUnit.DAYS.convert(difMillis, TimeUnit.MILLISECONDS);
 	        
-			this.nuFin   = (BigDecimal) linha.getCampo("NUFIN");
-			this.nuNota  = (BigDecimal) linha.getCampo("NUNOTA");
-			this.numNota = (BigDecimal) linha.getCampo("NUMNOTA");
-			this.codParc = (BigDecimal) linha.getCampo("CODPARC");
-			this.codEmp  = (BigDecimal) linha.getCampo("CODEMP");
-			
-			
+	        this.financeiro.setCodEmp((BigDecimal) linha.getCampo("CODEMP"));
+			this.financeiro.setCodParc((BigDecimal) linha.getCampo("CODPARC"));
+	        this.financeiro.setNuFin((BigDecimal) linha.getCampo("NUFIN"));
+			this.financeiro.setNuNota((BigDecimal) linha.getCampo("NUNOTA"));
+			this.financeiro.setNumNota((BigDecimal) linha.getCampo("NUMNOTA"));
+						
 			if (linha.getCampo("PROVISAO").equals("S")) {
 				msg.exibirErro("Operação Interrompida", "Não é possível enviar provisões ao Serasa", null);
 			} else if (((BigDecimal) linha.getCampo("RECDESP")).intValue() != 1) {
@@ -82,26 +76,26 @@ public class IncluirTitulosSerasa implements AcaoRotinaJava{
 			/*else if(diffDias <= 15) { throw new Exception("O registro de número único " + nuFin + " não pode ser enviado pois possui menos de 15 dias de vencimento"); */			
 				else if(linha.getCampo("AD_SERASA") != null ) {
 				if (linha.getCampo("AD_SERASA").equals("S")) {
-					msg.exibirErro("Operação interrompida", "O registro de número único " + nuFin + " já foi enviado ao Serasa.", null);
+					msg.exibirErro("Operação interrompida", "O registro de número único " + this.financeiro.getNuFin() + " já foi enviado ao Serasa.", null);
 				}
 			} else if(linha.getCampo("DHBAIXA") != null && linha.getCampo("CODTIPOPERBAIXA") != "0") {
-				throw new Exception("O registro número único " + nuFin + " já foi baixado e não pode ser enviado ao Serasa.");
+				throw new Exception("O registro número único " + this.financeiro.getNuFin() + " já foi baixado e não pode ser enviado ao Serasa.");
 			} 
 			
 				getDiasEnvioSerasa(diffDias);
-				getValidaParceiro(this.codParc);
-				getValidaStatusRastreioMercadoria(this.nuNota);
+				getValidaParceiro(this.financeiro.getCodParc());
+				getValidaStatusRastreioMercadoria(this.financeiro.getNuNota());
 			
 			final boolean confirmaOperacao = contexto.confirmarSimNao("Deseja continuar?", "Foram selecionado (s) " + linhas.length + " registro (s) para enviar ao Serasa.", 0);
 			
 			if (confirmaOperacao) {
-				BigDecimal numContrato = this.numNota;
+				BigDecimal numContrato = this.financeiro.getNumNota();
 				this.xmlRequest = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:web=\"http://webservice.spc.insumo.spcjava.spcbrasil.org/\"> <soapenv:Header/> <soapenv:Body> <web:incluirSpc> <insumoSpc> <tipo-pessoa>J</tipo-pessoa> <dados-pessoa-juridica> <cnpj numero=\"" + this.cgc_cpf + "\"/> <razao-social> " + this.razaoSocial +  " </razao-social> <nome-comercial>" + this.nomeFantasia + "</nome-comercial> </dados-pessoa-juridica> <data-compra>" + linha.getCampo("DTNEG") + "T00:00:00" + "</data-compra> <data-vencimento>" +linha.getCampo("DTVENC") + "T00:00:00" + "</data-vencimento> <codigo-tipo-devedor>C</codigo-tipo-devedor> <numero-contrato>" + numContrato + "</numero-contrato> <valor-debito> " + linha.getCampo("VLRDESDOB") + "</valor-debito> <natureza-inclusao> <id>1</id> </natureza-inclusao> <endereco-pessoa> <cep>-" + this.cep+ "</cep> <logradouro>" +this.logradouro +"</logradouro> <bairro>" + this.nomeBairro + "</bairro> <numero>" + this.numEndereco + "</numero> </endereco-pessoa> </insumoSpc> </web:incluirSpc> </soapenv:Body> </soapenv:Envelope>";
 				integracao();
-				contexto.setMensagemRetorno("Dados enviados com sucesso!");
+				contexto.setMensagemRetorno("Registros processados, verifique o log para mais informações!");
 				
-				linha.setCampo("AD_SERASA", "S");
-				linha.save();
+				//linha.setCampo("AD_SERASA", "S");
+				//linha.save();
 			}
 		}
 	}
@@ -169,7 +163,7 @@ public class IncluirTitulosSerasa implements AcaoRotinaJava{
 			jdbc.openSession();
 
 			sql = new NativeSql(jdbc);
-			sql.setNamedParameter("P_NUNOTA", this.nuNota);
+			sql.setNamedParameter("P_NUNOTA", this.financeiro.getNuNota());
 			sql.appendSql("SELECT FUN_CVT_RASTREIO_PEDIDO(:P_NUNOTA) AS STATUS FROM DUAL");
 
 			dataSet = sql.executeQuery();
@@ -179,7 +173,7 @@ public class IncluirTitulosSerasa implements AcaoRotinaJava{
 			}			
 			
 			if (status) {
-				throw new Exception("A mercadoria do documento " + this.numNota +  " já foi entregue e não pode ser enviada ao Serasa");
+				throw new Exception("A mercadoria do documento " + this.financeiro.getNumNota() +  " já foi entregue e não pode ser enviada ao Serasa");
 			}
 			
 		} catch (Exception erro) {
@@ -196,10 +190,10 @@ public class IncluirTitulosSerasa implements AcaoRotinaJava{
 		IntegracaoSankhyaSerasa integrador = new IntegracaoSankhyaSerasa();
 		integrador.setXmlBody(this.xmlRequest);
 		integrador.getValidaEnvioSerasa(codUsuLogado);
-		integrador.validaRegistroLog(this.nuFin, "I");
-		integrador.setCodEmpresaOperador(this.codEmp);
-		integrador.operacaoSerasa();
-		integrador.inserirLog(this.nuFin, this.codParc, this.codUsuLogado, "I");
+		//integrador.validaRegistroLog(financeiro.getNuFin(), "I");
+		integrador.setCodEmpresaOperador(this.financeiro.getCodEmp() );
+		
+		integrador.operacaoSerasa(this.financeiro.getNuFin(), this.financeiro.getCodParc(), this.codUsuLogado, "I");
 		}
 }
 		

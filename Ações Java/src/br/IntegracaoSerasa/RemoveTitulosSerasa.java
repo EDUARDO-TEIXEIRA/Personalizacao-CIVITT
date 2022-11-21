@@ -20,12 +20,8 @@ import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 
 
 public class RemoveTitulosSerasa implements AcaoRotinaJava{
-	private BigDecimal nuNota;
-	private BigDecimal numNota ;
-	private BigDecimal nuFin;
+	FinanceiroUtil financeiro = new FinanceiroUtil();
 	
-	private BigDecimal codEmp ;
-	private BigDecimal codParc;
 	private String cgc_cpf;
 	
 	private String razaoSocial;
@@ -34,7 +30,7 @@ public class RemoveTitulosSerasa implements AcaoRotinaJava{
 	private EntityFacade dwf;
 	private StringBuffer mensagem;
 	String xmlRequest = "";
-	MensagemRetorno msg = new MensagemRetorno();
+	MensagemRetornoUtil msg = new MensagemRetornoUtil();
 	
 	@Override
 	public void doAction(final ContextoAcao contexto) throws Exception {
@@ -59,11 +55,10 @@ public class RemoveTitulosSerasa implements AcaoRotinaJava{
 	        Long difMillis = dtFinal.getTimeInMillis() - dtInicio.getTimeInMillis();
 	        Long diffDias = TimeUnit.DAYS.convert(difMillis, TimeUnit.MILLISECONDS);
 	        
-			this.nuFin = (BigDecimal) linha.getCampo("NUFIN");			
-			this.nuNota = (BigDecimal) linha.getCampo("NUNOTA");
-			this.numNota = (BigDecimal) linha.getCampo("NUMNOTA");
-			this.codParc = (BigDecimal) linha.getCampo("CODPARC");
-			this.codEmp = (BigDecimal) linha.getCampo("CODEMP");
+			this.financeiro.setNuFin((BigDecimal) linha.getCampo("NUFIN"));
+			this.financeiro.setNumNota((BigDecimal) linha.getCampo("NUMNOTA"));
+			this.financeiro.setCodEmp((BigDecimal) linha.getCampo("CODEMP"));
+			this.financeiro.setCodParc((BigDecimal) linha.getCampo("CODPARC"));
 			
 			if (linha.getCampo("PROVISAO").equals("S")) {
 				msg.exibirErro("ERRO AO PROCESSAR DADOS", "Não é possível enviar provisões ao Serasa", null);
@@ -74,34 +69,30 @@ public class RemoveTitulosSerasa implements AcaoRotinaJava{
 			} else if (linha.getCampo("AD_SERASA").equals("N")) {
 				msg.exibirErro("ERRO AO PROCESSAR DADOS", "O registro não foi enviado ao Serasa.", null);
 			} else if(linha.getCampo("DHBAIXA") != null && linha.getCampo("CODTIPOPERBAIXA") != "0") {
-				msg.exibirErro("ERRO AO PROCESSAR DADOS", "O registro número único " + nuFin + " já foi baixado e não pode ser enviado ao Serasa.", null);
+				msg.exibirErro("ERRO AO PROCESSAR DADOS", "O registro número único " + this.financeiro.getNuFin() + " já foi baixado e não pode ser enviado ao Serasa.", null);
 			} 	
 			
 			final boolean confirmaOperacao = contexto.confirmarSimNao("Deseja continuar?", "Foram selecionado (s) " + linhas.length + " registro (s) para enviar ao Serasa.", 0);
 			
 			if (confirmaOperacao) {
-				getBuscaParceiro(this.codParc);
-				BigDecimal numContrato = this.numNota;
+				getBuscaParceiro(this.financeiro.getCodParc());
+				BigDecimal numContrato = this.financeiro.getNumNota();
 			    this.xmlRequest = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:web=\"http://webservice.spc.insumo.spcjava.spcbrasil.org/\"> <soapenv:Header/> <soapenv:Body> <web:excluirSpc> <excluir> <tipo-pessoa>J</tipo-pessoa> <dados-pessoa-juridica> <cnpj numero=\"" + this.cgc_cpf + "\"/> <razao-social>" + this.razaoSocial + "</razao-social> <nome-comercial>" + this.nomeFantasia+ "</nome-comercial> </dados-pessoa-juridica> <data-vencimento>"+linha.getCampo("DTVENC") + "T00:00:00" + "</data-vencimento> <numero-contrato>" + numContrato + "</numero-contrato> <motivo-exclusao> <id>1</id> </motivo-exclusao> </excluir> </web:excluirSpc> </soapenv:Body> </soapenv:Envelope>"; 
 			    integracao();
-			    contexto.setMensagemRetorno("Dados excluídos com sucesso!");
-				linha.setCampo("AD_SERASA", "N");
-				linha.save();
+			    contexto.setMensagemRetorno("Registros processados, verifique o log para mais informações.");
+				//linha.setCampo("AD_SERASA", "N");
+				//linha.save();
 			}
 		}
 	}
 	private void integracao() throws Exception {
 		IntegracaoSankhyaSerasa integrador = new IntegracaoSankhyaSerasa();
 		integrador.setXmlBody(this.xmlRequest);
-		integrador.getValidaEnvioSerasa(codUsuLogado);		
-		integrador.setCodEmpresaOperador(this.codEmp);
-		integrador.validaRegistroLog(this.nuFin, "E");
-		try {
-			integrador.operacaoSerasa();
-			integrador.inserirLog(this.nuFin, this.codParc, this.codUsuLogado, "E");	
-		} catch (Exception e) {
-			integrador.inserirLog(this.nuFin, this.codParc, this.codUsuLogado, "00");
-		}
+		//integrador.getValidaEnvioSerasa(codUsuLogado);		
+		integrador.setCodEmpresaOperador(this.financeiro.getCodEmp());
+		integrador.validaRegistroLog(this.financeiro.getNuFin(), "E");
+		
+		integrador.operacaoSerasa(this.financeiro.getNuFin(), this.financeiro.getCodParc(), this.codUsuLogado, "E");
 		}
 	
 	private void getBuscaParceiro(BigDecimal codParceiro) throws Exception {
