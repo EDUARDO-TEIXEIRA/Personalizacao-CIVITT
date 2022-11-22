@@ -88,9 +88,8 @@ public class IncluirTitulosSerasa implements AcaoRotinaJava {
 			}
 				getDiasEnvioSerasa(diffDias);
 				getValidaParceiro(this.financeiro.getCodParc());
-				if (linha.getCampo("NURENEG") == null && linha.getCampo("NUMNOTA").equals(0)) {
-					getValidaStatusRastreioMercadoria(this.financeiro.getNuNota());	
-				}
+				getValidaStatusRastreioMercadoria();	
+				
 				
 			final boolean confirmaOperacao = contexto.confirmarSimNao("Deseja continuar?", "Foram selecionado (s) " + linhas.length + " registro (s) para enviar ao Serasa.", 0);
 			
@@ -157,7 +156,7 @@ public class IncluirTitulosSerasa implements AcaoRotinaJava {
 		}
 	}
 	
-	private void getValidaStatusRastreioMercadoria(BigDecimal nunota) throws Exception {
+	private void getValidaStatusRastreioMercadoria() throws Exception {
 		NativeSql sql = null;
 		ResultSet dataSet = null;
 		SessionHandle hnd = null;
