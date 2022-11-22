@@ -24,13 +24,13 @@ import br.com.sankhya.modelcore.util.DynamicEntityNames;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 
 
-public class IncluirTitulosSerasa implements AcaoRotinaJava{
+public class IncluirTitulosSerasa implements AcaoRotinaJava {
 	MensagemRetornoUtil msg = new MensagemRetornoUtil();
 	FinanceiroUtil financeiro = new FinanceiroUtil();
 		
 	private String cgc_cpf;
 	private String logradouro;
-	private BigDecimal numEndereco;
+	private String numEndereco;
 	private String nomeBairro;
 	private String cep;
 	
@@ -49,7 +49,8 @@ public class IncluirTitulosSerasa implements AcaoRotinaJava{
 		Registro[] linhas = contexto.getLinhas();
 		
 		if (linhas.length == 0 ) {
-			msg.exibirErro("Operação inválida","Selecione uma linha", null);
+			throw new Exception("Selecione uma linha");
+			//msg.exibirErro("Operação inválida","Selecione uma linha", null);
 		}
 		
 		for (Registro linha : linhas) 
@@ -59,6 +60,7 @@ public class IncluirTitulosSerasa implements AcaoRotinaJava{
 	        Calendar dtFinal = Calendar.getInstance();
 	        dtFinal.setTime(dtFinal.getTime());
 	        
+	        
 	        Long difMillis = dtFinal.getTimeInMillis() - dtInicio.getTimeInMillis();
 	        Long diffDias = TimeUnit.DAYS.convert(difMillis, TimeUnit.MILLISECONDS);
 	        
@@ -67,25 +69,29 @@ public class IncluirTitulosSerasa implements AcaoRotinaJava{
 	        this.financeiro.setNuFin((BigDecimal) linha.getCampo("NUFIN"));
 			this.financeiro.setNuNota((BigDecimal) linha.getCampo("NUNOTA"));
 			this.financeiro.setNumNota((BigDecimal) linha.getCampo("NUMNOTA"));
-						
+				
 			if (linha.getCampo("PROVISAO").equals("S")) {
-				msg.exibirErro("Operação Interrompida", "Não é possível enviar provisões ao Serasa", null);
+				throw new Exception("Não é possível enviar provisões ao Serasa");
+				//msg.exibirErro("Operação Interrompida", "Não é possível enviar provisões ao Serasa", null);
 			} else if (((BigDecimal) linha.getCampo("RECDESP")).intValue() != 1) {
-				msg.exibirErro("Operação Interrompida", "Não é possível enviar despesas ou provisões ao Serasa", null);
-			} 
-			/*else if(diffDias <= 15) { throw new Exception("O registro de número único " + nuFin + " não pode ser enviado pois possui menos de 15 dias de vencimento"); */			
-				else if(linha.getCampo("AD_SERASA") != null ) {
+				throw new Exception("Não é possível enviar despesas ou provisões ao Serasa");
+				//msg.exibirErro("Operação Interrompida", "Não é possível enviar despesas ou provisões ao Serasa", null);
+			}  else if(linha.getCampo("AD_SERASA") != null ) {
 				if (linha.getCampo("AD_SERASA").equals("S")) {
-					msg.exibirErro("Operação interrompida", "O registro de número único " + this.financeiro.getNuFin() + " já foi enviado ao Serasa.", null);
+					throw new Exception("O registro de número único " + this.financeiro.getNuFin() + " já foi enviado ao Serasa.");
+				//msg.exibirErro("Operação interrompida", "O registro de número único " + this.financeiro.getNuFin() + " já foi enviado ao Serasa.", null);
 				}
 			} else if(linha.getCampo("DHBAIXA") != null && linha.getCampo("CODTIPOPERBAIXA") != "0") {
 				throw new Exception("O registro número único " + this.financeiro.getNuFin() + " já foi baixado e não pode ser enviado ao Serasa.");
-			} 
-			
+			} else if(linha.getCampo("NUMNOTA") == null) {
+				throw new Exception("Documento sem número de nota informado no registro " + this.financeiro.getNuFin());
+			}
 				getDiasEnvioSerasa(diffDias);
 				getValidaParceiro(this.financeiro.getCodParc());
-				getValidaStatusRastreioMercadoria(this.financeiro.getNuNota());
-			
+				if (linha.getCampo("NURENEG") == null && linha.getCampo("NUMNOTA").equals(0)) {
+					getValidaStatusRastreioMercadoria(this.financeiro.getNuNota());	
+				}
+				
 			final boolean confirmaOperacao = contexto.confirmarSimNao("Deseja continuar?", "Foram selecionado (s) " + linhas.length + " registro (s) para enviar ao Serasa.", 0);
 			
 			if (confirmaOperacao) {
@@ -114,7 +120,8 @@ public class IncluirTitulosSerasa implements AcaoRotinaJava{
 				if(linha.asString("AD_IGNORAENVIOSERASA").equals("S")) { 
 					throw new Exception("O parceiro <b>" + codParceiro + " - " + linha.asString("RAZAOSOCIAL").toString() + "</b> não pode ser enviado ao Serasa!");
 				}
-			}  
+			} 
+			
 			this.dwf = EntityFacadeFactory.getDWFFacade();
 			jdbc = dwf.getJdbcWrapper();
 			jdbc.openSession();
@@ -129,7 +136,7 @@ public class IncluirTitulosSerasa implements AcaoRotinaJava{
 
 				this.cep = dataSet.getString("CEP");
 				this.nomeBairro = dataSet.getString("NOMEBAI");
-				this.numEndereco = dataSet.getBigDecimal("NUMEND");
+				this.numEndereco = dataSet.getString("NUMEND");
 				this.logradouro = dataSet.getString("NOMEEND");
 			}
 			
@@ -163,17 +170,24 @@ public class IncluirTitulosSerasa implements AcaoRotinaJava{
 			jdbc.openSession();
 
 			sql = new NativeSql(jdbc);
-			sql.setNamedParameter("P_NUNOTA", this.financeiro.getNuNota());
-			sql.appendSql("SELECT FUN_CVT_RASTREIO_PEDIDO(:P_NUNOTA) AS STATUS FROM DUAL");
-
+			
+			if ( this.financeiro.getNuNota() != null) {
+				sql.setNamedParameter("P_NUNOTA", this.financeiro.getNuNota());
+				sql.appendSql("SELECT FUN_CVT_RASTREIO_PEDIDO(:P_NUNOTA) AS STATUS FROM DUAL");	
+			} else {
+				sql.setNamedParameter("P_NUMNOTA", this.financeiro.getNumNota());
+				sql.setNamedParameter("P_CODEMP", this.financeiro.getCodEmp());
+				sql.appendSql("SELECT FUN_CVT_RASTREIO_PEDIDO(NUNOTA) AS STATUS FROM TGFCAB WHERE NUMNOTA||CODEMP = :P_NUMNOTA ||:P_CODEMP AND TIPMOV = 'V'");
+			}
+			
 			dataSet = sql.executeQuery();
 
 			if (dataSet.next()) {
-				status = "ENTREGUE".equals(dataSet.getString("STATUS"));
+				status = (!"ENTREGUE".equals(dataSet.getString("STATUS")));
 			}			
 			
 			if (status) {
-				throw new Exception("A mercadoria do documento " + this.financeiro.getNumNota() +  " já foi entregue e não pode ser enviada ao Serasa");
+				throw new Exception("A mercadoria do documento " + this.financeiro.getNumNota() +  " não foi entregue e não pode ser enviada ao Serasa");
 			}
 			
 		} catch (Exception erro) {
@@ -190,7 +204,6 @@ public class IncluirTitulosSerasa implements AcaoRotinaJava{
 		IntegracaoSankhyaSerasa integrador = new IntegracaoSankhyaSerasa();
 		integrador.setXmlBody(this.xmlRequest);
 		integrador.getValidaEnvioSerasa(codUsuLogado);
-		//integrador.validaRegistroLog(financeiro.getNuFin(), "I");
 		integrador.setCodEmpresaOperador(this.financeiro.getCodEmp() );
 		
 		integrador.operacaoSerasa(this.financeiro.getNuFin(), this.financeiro.getCodParc(), this.codUsuLogado, "I");

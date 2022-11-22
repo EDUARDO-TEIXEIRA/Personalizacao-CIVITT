@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.sql.ResultSet;
+import java.text.SimpleDateFormat;
 import java.util.Base64;
 import java.util.Collection;
 
@@ -39,7 +40,6 @@ public class IntegracaoSankhyaSerasa {
 	MensagemRetornoUtil msg = new MensagemRetornoUtil();
 	public EntityFacade dwf;
 	public JdbcWrapper jdbc = null;
-	private String sucessoOperacao = "";
 	
 	private BigDecimal codEmpresaOperador;
 	private String xmlBody;
@@ -56,24 +56,6 @@ public class IntegracaoSankhyaSerasa {
 	}
 	public void setCodEmpresaOperador(BigDecimal codEmpresaOperador) {
 		this.codEmpresaOperador = codEmpresaOperador;
-	}
-	
-	public void validaRegistroLog(BigDecimal nufin, String operacao) throws MGEModelException {
-		try 
-		{
-			this.dwf = EntityFacadeFactory.getDWFFacade();
-			String filtroSQL = "NUFIN = " + nufin +  " AND CODOPERACAO IN ('" + operacao + "')";
-			FinderWrapper buscaRegistro = new FinderWrapper("AD_LOGSERASA", filtroSQL);
-			Collection<PersistentLocalEntity> logVO = dwf.findByDynamicFinder(buscaRegistro);
-			
-			if (!logVO.isEmpty()) {
-				msg.exibirErro("Operação cancelada","O registro de número único " + nufin + " já foi processado ao Serasa" , "Verifique o log para mais informações");
-			}
-			
-		} catch (Exception e) {
-		      MGEModelException.throwMe(e);
-		}
-		
 	}
 
 	public String getOperador(BigDecimal codemp) throws Exception {
@@ -156,17 +138,14 @@ public class IntegracaoSankhyaSerasa {
 			 
 		     xmlReturn = in.readLine();
 		     in.close();
-		     sucessoOperacao = operacao;
 		     
-		     inserirLog(nufin, codParc, codUsuLogado, sucessoOperacao);
+		     inserirLog(nufin, codParc, codUsuLogado, operacao);
 		     
 		} catch (Exception erro) {
 			BufferedReader in = new BufferedReader(new InputStreamReader(connection.getErrorStream(), "utf-8"));
 			String resultado = in.readLine();
 			xmlReturn = resultado;
-			
-			sucessoOperacao = "00";
-			inserirLog(nufin, codParc, codUsuLogado, sucessoOperacao);
+			inserirLog(nufin, codParc, codUsuLogado, "00");
 	        in.close();
 	        
 		} finally {
@@ -183,7 +162,13 @@ public class IntegracaoSankhyaSerasa {
 	            jdbc.openSession();
 	            
 	            logVo.setProperty("NUFIN", nufin);
-	            logVo.setProperty("CODOPERACAO", operacao);
+	            if (operacao != "00") {
+	            	logVo.setProperty("CODOPERACAO", operacao);	
+				} else {
+					SimpleDateFormat format = new SimpleDateFormat("hh:mm:sss");
+					logVo.setProperty("CODOPERACAO",format.format(TimeUtils.getNow()));
+				} 
+	            
 	            logVo.setProperty("DTALTERACAO",TimeUtils.getNow());
 	            logVo.setProperty("CODPARC", codParc);
 	            logVo.setProperty("CODUSU", codUsuLogado);
@@ -196,31 +181,33 @@ public class IntegracaoSankhyaSerasa {
 	            
 	            System.out.println("Log de inclusão do serasa gravado com sucesso!");
 
-	            NativeSql updateFin = null;
 	            // Atualização do campo Serasa no Financeiro
-	            try {
-	            	String alteraSerasa = "";
-		            
-		            if (!sucessoOperacao.equals("00")) {
-		            	if (operacao.equals("I")) {
-		            		alteraSerasa = "S";
-						}else {
-							alteraSerasa = "N";
-						}
-		            	updateFin = new NativeSql(jdbc);
-				    	updateFin.setNamedParameter("P_OPERACAO", alteraSerasa);
-				    	updateFin.setNamedParameter("P_NUFIN", nufin);
-				    	updateFin.appendSql("UPDATE TGFFIN SET AD_SERASA = {P_OPERACAO} WHERE NUFIN = {P_NUFIN}");
-				    	
-				    	updateFin.executeQuery();		
-					}
+	                        
+	            try {		     
+	            	if (operacao != "00") {
+			            FinderWrapper finderFinanceiro = new FinderWrapper("Financeiro", "NUFIN = " + nufin);
+			        	Collection<PersistentLocalEntity> finderFinanceiroCPLE = this.dwf.findByDynamicFinder(finderFinanceiro);
+			        	for (PersistentLocalEntity finderFinanceiroPLE  : finderFinanceiroCPLE) 
+			        	{
+			        		EntityVO finderFinanceiroEVO = finderFinanceiroPLE.getValueObject();
+			        		DynamicVO financeiroVO = (DynamicVO) finderFinanceiroEVO;
+			        		if (operacao == "I") {
+			        			financeiroVO.setProperty("AD_SERASA", "S");	
+							}else {
+								financeiroVO.setProperty("AD_SERASA", "N");
+							}
+			        		
+			        		finderFinanceiroPLE.setValueObject((EntityVO) financeiroVO);		
+			        	}
+	            	}
 			    	
 				} catch (Exception e) {
 					
 				}
 
 	        } catch (Exception erro){
-	        	msg.exibirErro("Não foi possível gravar o log da inclusão do serasa." + erro.toString(), null, null);
+	        	throw new Exception("Não foi possível gravar o log da inclusão do serasa." + erro.toString());
+	        	//msg.exibirErro("Não foi possível gravar o log da inclusão do serasa." + erro.toString(), null, null);
 	        }
 	        
 	        finally {
