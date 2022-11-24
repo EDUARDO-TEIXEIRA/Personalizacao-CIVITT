@@ -1,13 +1,11 @@
 package br.civitt.Parceiro;
 import br.civitt.Utilitarios.ParceiroUtil;
-import br.civitt.Utilitarios.*;
 
 
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.util.Collection;
 
-import br.com.sankhya.extensions.actionbutton.ContextoAcao;
 import br.com.sankhya.extensions.eventoprogramavel.EventoProgramavelJava;
 import br.com.sankhya.jape.EntityFacade;
 import br.com.sankhya.jape.bmp.PersistentLocalEntity;
@@ -113,23 +111,44 @@ public class AtualizaTransportadoraPreferencial implements EventoProgramavelJava
     			
     			alteraTransportadora();
     		}
-			
-			
+
 		} catch (Exception erro) {
 			throw new Exception("ERRO: " + erro.toString());
 		}
 	}
+	public void insereDadosComplemento () throws Exception {
+		try {
+        		this.dwf = EntityFacadeFactory.getDWFFacade();
+	            DynamicVO comVO = (DynamicVO) this.dwf.getDefaultValueObjectInstance(DynamicEntityNames.COMPLEMENTO_PARCEIRO);  
+	            jdbc = dwf.getJdbcWrapper();
+	            jdbc.openSession();
+	            
+	            comVO.setProperty("CODPARC", cliente.getCodparc());
+	            
+	            PersistentLocalEntity createEntity = dwf.createEntity(DynamicEntityNames.COMPLEMENTO_PARCEIRO, (EntityVO) comVO);
+	            DynamicVO save = (DynamicVO) createEntity.getValueObject();
+	            alteraTransportadora ();
+	            
+		} catch (Exception erro) {
+			throw new Exception("Não foi possível inserir os dados de complemento do Parceiro" + erro.toString());
+		}
+		
+	}
+	
 	public void alteraTransportadora () throws Exception {
     	
     	try {
-    		final ContextoAcao contexto = null;
     			/*Filtro de parceiro*/
     			this.dwf = EntityFacadeFactory.getDWFFacade(); 
     			FinderWrapper finderComplemento = new FinderWrapper(DynamicEntityNames.COMPLEMENTO_PARCEIRO, "CODPARC = ?", new Object[] {cliente.getCodparc()});
 	        	Collection<PersistentLocalEntity> finderComplementoCPLE = this.dwf.findByDynamicFinder(finderComplemento);
+	        	
+	        	if (finderComplementoCPLE.isEmpty()) {
+	        		insereDadosComplemento();	
+				}
+	        	
 	        	for (PersistentLocalEntity linha  : finderComplementoCPLE) 
 	        	{
-	        		
 	        		jdbc = this.dwf.getJdbcWrapper();
 		            jdbc.openSession();
 	        		EntityVO finderComplementoEVO = linha.getValueObject();
@@ -184,7 +203,6 @@ public class AtualizaTransportadoraPreferencial implements EventoProgramavelJava
 						}
 					}
 	        		linha.setValueObject((EntityVO) complementoVO); // salva linha
-	        		contexto.setMensagemRetorno("Foi vinculoado a transportadora" + complementoVO.asBigDecimal("CODPARCTRANSP"));
 	        	}
 		} catch (Exception erro) {
 			throw new Exception("Erro ao tentar salvar transportadora preferencial, motivo: " + erro.toString());
