@@ -98,9 +98,6 @@ public class IncluirTitulosSerasa implements AcaoRotinaJava {
 				this.xmlRequest = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:web=\"http://webservice.spc.insumo.spcjava.spcbrasil.org/\"> <soapenv:Header/> <soapenv:Body> <web:incluirSpc> <insumoSpc> <tipo-pessoa>J</tipo-pessoa> <dados-pessoa-juridica> <cnpj numero=\"" + this.cgc_cpf + "\"/> <razao-social> " + this.razaoSocial +  " </razao-social> <nome-comercial>" + this.nomeFantasia + "</nome-comercial> </dados-pessoa-juridica> <data-compra>" + linha.getCampo("DTNEG") + "T00:00:00" + "</data-compra> <data-vencimento>" +linha.getCampo("DTVENC") + "T00:00:00" + "</data-vencimento> <codigo-tipo-devedor>C</codigo-tipo-devedor> <numero-contrato>" + numContrato + "</numero-contrato> <valor-debito> " + linha.getCampo("VLRDESDOB") + "</valor-debito> <natureza-inclusao> <id>1</id> </natureza-inclusao> <endereco-pessoa> <cep>-" + this.cep+ "</cep> <logradouro>" +this.logradouro +"</logradouro> <bairro>" + this.nomeBairro + "</bairro> <numero>" + this.numEndereco + "</numero> </endereco-pessoa> </insumoSpc> </web:incluirSpc> </soapenv:Body> </soapenv:Envelope>";
 				integracao();
 				contexto.setMensagemRetorno("Registros processados, verifique o log para mais informações!");
-				
-				//linha.setCampo("AD_SERASA", "S");
-				//linha.save();
 			}
 		}
 	}

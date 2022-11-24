@@ -36,20 +36,22 @@ public class VerificaAlteracaoSerasa implements EventoProgramavelJava  {
 		DynamicVO finVO = (DynamicVO) contexto.getVo();
 		ModifingFields modFields = contexto.getModifingFields();
 		
-		if(finVO.getProperty("TIPPESSOA") != "J" & modFields.isModifing("AD_IGNORAENVIOSERASA")) {
-			throw new NullPointerException("Operação não permitida! A marcação está disponível apenas para pessoas jurídicas. <b>[Ignora envio ao Serasa]</b>.");
+		if(finVO.getProperty("TIPPESSOA").equals("F") && modFields.isModifing("AD_IGNORAENVIOSERASA")) {
+			throw new Exception("Operação não permitida! A marcação está disponível apenas para pessoas jurídicas. <b>[Ignora envio ao Serasa]</b>.");
 		}
 		
-		if (modFields.isModifing("AD_IGNORAENVIOSERASA") && modFields.getNewValue("AD_IGNORAENVIOSERASA") != null) {
-			if (finVO.getProperty("AD_IGNORAENVIOSERASA").equals("S") || finVO.getProperty("AD_IGNORAENVIOSERASA").equals("N")) {
+		if (modFields.isModifing("AD_IGNORAENVIOSERASA")) {
+			
+			if(finVO.getProperty("TIPPESSOA").equals("F")) {
+				throw new Exception("Operação não permitida! A marcação está disponível apenas para pessoas jurídicas. <b>[Ignora envio ao Serasa]</b>.");
+			}
 				for (DynamicVO linhaUsuarioVO : usuario) {
 					if (linhaUsuarioVO.asString("AD_PERM_ALT_EXC_PARC_SERASA") == null) { 
 						throw new NullPointerException("O usuário não tem permissão para alterar o campo <b>[Ignora envio ao Serasa]</b>.");
 					} else if (linhaUsuarioVO.asString("AD_PERM_ALT_EXC_PARC_SERASA").equals("N")) {
 						throw new Exception("O usuário não tem permissão para alterar o campo <b>[Ignora envio ao Serasa]</b>.");
 					}	
-				}
-			}	
+				}	
 		}
 	}
 
