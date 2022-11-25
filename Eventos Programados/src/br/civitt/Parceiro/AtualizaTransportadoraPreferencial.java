@@ -28,38 +28,38 @@ public class AtualizaTransportadoraPreferencial implements EventoProgramavelJava
 	private enum Nordeste {
 		AL, CE, MA, PA, PB, PE, PI, RN, SE;
 		BigDecimal getTransportadora() {
-			return BigDecimal.valueOf(11298);
+			return BigDecimal.valueOf(14266); // JEOLOG TRANSPORTES
 		}	
 	}
 	public enum Sudeste {
 		RJ, SP;
 		BigDecimal getTransportadora() {
-			return BigDecimal.valueOf(4691);
+			return BigDecimal.valueOf(4691); // SOLARE ADMINISTRACAO E CONSULTORIA LTDA - EPP
 		}
 	}
 	public enum Sul {
 		PR, RS, SC;
 		BigDecimal getTransportadora() {
-			return BigDecimal.valueOf(16940);
+			return BigDecimal.valueOf(16940); // DIRECIONAL TRANSPORTE E LOGISTICA S/A
 		}
 	}
 	public enum CentroOeste {
 		MT, MS, TO;
 		BigDecimal getTransportadora() {
-			return BigDecimal.valueOf(16940);
+			return BigDecimal.valueOf(14434); // MIRA SERVICOS DE TRANSPORTES LTDA.
 		}
 	}
 	public enum Norte {
 		AC, AP, AM, RO, RR;
 		BigDecimal getTransportadora() {
-			return BigDecimal.valueOf(11298);
+			return BigDecimal.valueOf(11298); // EXATA CARGO LTDA 
 		}
 	}
 	
 	public enum OutrosUF {
 		DF, GO, MG;
 		BigDecimal getTransportadora() {
-			return BigDecimal.valueOf(10352);
+			return BigDecimal.valueOf(10352); // TG TRANSPORTES GERAIS E DISTRIBUICAO LTDA
 		}
 	}
 	
@@ -104,7 +104,7 @@ public class AtualizaTransportadoraPreferencial implements EventoProgramavelJava
 	    ModifingFields modFields = contexto.getModifingFields();
 	    	
     	try {
-    		if (modFields.isModifing("CODCID") && modFields.getNewValue("CODCID") != modFields.getOldValue("CODCID")) {
+    		if (modFields.isModifing("CODTAB") && modFields.getNewValue("CODTAB") != modFields.getOldValue("CODTAB")) {
     			cliente.setCodparc(parVo.asBigDecimal("CODPARC"));
     			cliente.setCodCid(parVo.asBigDecimal("CODCID"));
     			cliente.setTipPessoa(parVo.asString("TIPPESSOA"));
@@ -166,9 +166,9 @@ public class AtualizaTransportadoraPreferencial implements EventoProgramavelJava
 	        		while (result.next()) {
 	        			 
 						if (result.getString("UF").equals("ES")) {
-							complementoVO.setProperty("CODPARCTRANSP", BigDecimal.valueOf(2310));
+							complementoVO.setProperty("CODPARCTRANSP", BigDecimal.valueOf(2310)); // TRESELES TRANSPORTES DE CARGAS LTDA
 						} else if (result.getString("UF").equals("BA")) {
-							complementoVO.setProperty("CODPARCTRANSP", BigDecimal.valueOf(10797));
+							complementoVO.setProperty("CODPARCTRANSP", BigDecimal.valueOf(10797)); // REBOUCAS TRANSPORTES
 						} else {
 								for (Nordeste linhaUF : Nordeste.values()) {
 									if (result.getString("UF").equals(linhaUF.toString())) {
