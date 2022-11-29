@@ -1,6 +1,6 @@
 
 <div align="center">
-![Logo](https://github.com/EDUARDO-TEIXEIRA/Personalizacao-CIVITT/blob/c5f006321b8b2f97a2f0046babee906595bf8b5c/A%C3%A7%C3%B5es%20Java/src/br/IntegracaoLinCros/_imagensProjeto/capa-projeto.png)
+<img src="https://github.com/EDUARDO-TEIXEIRA/Personalizacao-CIVITT/blob/0877a84391e1809bb9f6236a9f51779cae3c4d41/M%C3%ADdias/_imagensProjeto/Integra%C3%A7%C3%A3o%20Lincros/capa-projeto.png">
 </div>
 
 # Introdução
