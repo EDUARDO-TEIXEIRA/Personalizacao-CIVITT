@@ -1,5 +1,8 @@
 package br.IntegracaoLinCros;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -41,26 +44,23 @@ public class IntegracaoLincros {
 			connection.setRequestProperty("Content-Type", "application/json");
 			connection.setRequestProperty("Content-Length", "<calculated when request is sent>");
 			connection.setRequestProperty("Host", "<calculated when request is sent>");
-			String jsonInputString = "{
-					"cnpjUnidade": "32463085000130",
-					"remetente": "32463085000130",
-					"peso": 255,
-					"cubagem": 0,
-					"pesoCubado": 0,
-					"valor": 5300,
-					"volumes": 4,
-					"abono": 0,
-					"percentualValorCliente": 0,
-					"cepOrigem": 26168081,
-					"cepDestino": 68440000,
-					"data": "2022-11-25",
-					"modalidadeFrete": 0,
-					"tipoOperacao": 1,
-					"transportadora": "",
-					"placa": ""
-				}
-
 			connection.setDoInput(true);
+			String jsonInputString = "{}";
+			
+			try(OutputStream os = connection.getOutputStream()) {
+			    byte[] input = jsonInputString.getBytes("utf-8");
+			    os.write(input, 0, input.length);			
+			}
+			try(BufferedReader br = new BufferedReader(
+					  new InputStreamReader(connection.getInputStream(), "utf-8"))) {
+					    StringBuilder response = new StringBuilder();
+					    String responseLine = null;
+					    while ((responseLine = br.readLine()) != null) {
+					        response.append(responseLine.trim());
+					    }
+			}
+			
+			
 			
 			if (connection.getResponseCode() <= 299) {
 				throw new Exception("Conectou");

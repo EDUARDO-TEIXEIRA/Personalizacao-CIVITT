@@ -81,3 +81,8 @@ Resposta 2
 
 ## Referência
 - [Cálculo com base nas tabelas já vigentes - LINCROS](https://integracao-api.lincros.com/swagger-tms/#/C%C3%A1lculo/post_v3_calculo_calcularNota)
+
+## Suporte
+
+Para suporte, mande um email para eduardo.teixeira@civitt.com.br
+
