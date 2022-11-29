@@ -12,8 +12,8 @@ public class MensagemRetornoUtil {
 		if (solucao != null) {
 			contexto += "<br><b>Solução: </b>" + solucao + ".<br><br>";
 		}
-		
-		throw new PersistenceException("<p align=\"center\"><a href=\"http://www.sankhya.com.br\" target=\"_blank\"><img src=\"http://192.168.1.248:8180/mge/imagens@IMAGEM@ID=75.dbimage\" height=\"40\" width=auto style = \"float:auto;\"></a></p><br/><p align=\"left\"><font size=\"2\" face=\"arial\" color=\"#8B1A1A\"><b>Atenção:  </b>" +
+		// Por enquanto está funcionando apenas em HTML5.
+		throw new PersistenceException("<p align=\"center\"><a href=\"http://www.sankhya.com.br\" target=\"_blank\"><img src=\"http://www.civitt.com.br/wp-content/themes/civitt2018/assets/img/logo_topo.png\" height=\"40\" width=auto style = \"float:auto;\"></a></p><br/><p align=\"left\"><font size=\"2\" face=\"arial\" color=\"#8B1A1A\"><b>Atenção:  </b>" +
 										contexto + 
 	                                  "<p align=\"center\"><font size=\"2\" color=\"#008B45\"><b>Informações para a equipe de tecnologia - CIVITT</b></font>"                      
 				) ;

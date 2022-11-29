@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.math.BigDecimal;
@@ -34,16 +36,31 @@ import com.sankhya.util.TimeUtils;
 public class TestesValores {
 	 
 	  public  static  void  main ( String args []) throws Exception  
-	    {  	        
-		  String texto = "A seguir estão os códigos de exemplo Java para demonstrar o funcionamento de split()";
-			String[] arrOfStr = texto.split(" ");
-			int index = 0;
-
-			for (String posicao : arrOfStr) {
-				if (7 == index++) {
-					System.out.println(posicao); 
-				}
+	  {  	        
+		  	URL url = new URL("https://deployment.transpofrete.com.br/api/v3/calculo/calcularNota");
+			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+			connection.setRequestMethod("POST");
+			connection.setRequestProperty("Authorization", "Bearer eBY9YydOYRH8cv3mT03gntbUWImFPsG8R0h4feVcaD");
+			connection.setRequestProperty("Content-Type", "application/json");
+			connection.setRequestProperty("Content-Length", "<calculated when request is sent>");
+			connection.setRequestProperty("Host", "<calculated when request is sent>");
+			connection.setDoOutput(true);
+			String bodyResquest = "{\r\n\t\"cnpjUnidade\": \"32463085000130\",\r\n\t\"remetente\": \"32463085000130\",\r\n\t\"peso\": 255,\r\n\t\"cubagem\": 0,\r\n\t\"pesoCubado\": 0,\r\n\t\"valor\": 5300,\r\n\t\"volumes\": 4,\r\n\t\"abono\": 0,\r\n\t\"percentualValorCliente\": 0,\r\n\t\"cepOrigem\": 26168081,\r\n\t\"cepDestino\": 68440000,\r\n\t\"data\": \"2022-11-25\",\r\n\t\"modalidadeFrete\": 0,\r\n\t\"tipoOperacao\": 1,\r\n\t\"transportadora\": \"\",\r\n\t\"placa\": \"\"\r\n}";
+			
+			try(OutputStream os = connection.getOutputStream()) {
+			    byte[] input = bodyResquest.getBytes("utf-8");
+			    os.write(input, 0, input.length);			
 			}
+			
+			try(BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "utf-8"))) {
+				StringBuilder response = new StringBuilder();
+				String responseLine = null;
+				while ((responseLine = br.readLine()) != null) {
+					        response.append(responseLine.trim());
+					    }
+			    System.out.println(response.toString());
+			}
+				
 	    } 
 	  private void manipulandoXML() throws TransformerException {
 	  DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
