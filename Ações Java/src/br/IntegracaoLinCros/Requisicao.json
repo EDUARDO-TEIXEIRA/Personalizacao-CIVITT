@@ -1,0 +1,18 @@
+{
+	"cnpjUnidade": "32463085000130",
+	"remetente": "32463085000130",
+	"peso": 255,
+	"cubagem": 0,
+	"pesoCubado": 0,
+	"valor": 5300,
+	"volumes": 4,
+	"abono": 0,
+	"percentualValorCliente": 0,
+	"cepOrigem": 26168081,
+	"cepDestino": 68440000,
+	"data": "2022-11-25",
+	"modalidadeFrete": 0,
+	"tipoOperacao": 1,
+	"transportadora": "",
+	"placa": ""
+}
