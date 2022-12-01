@@ -1,49 +1,37 @@
-
-
-<div align="center"><h1>PERSONALIZAÇÕES CIVITT</h1>
+<div align="center">
+<img alt="capa-civitt" widht="750px" height="180px" src="https://user-images.githubusercontent.com/34588048/204932272-a2f62341-11aa-49af-93b3-329360a808bd.png" width="750px" height="120px">
 </div>
-
-# 📖 Introdução
+# Introdução
 
 Neste repositório será adicionado os projetos desenvolvidos para atender demandas da CIVITT, além de ser uma maneira de compartilhar aprender e disseminar o conhecimento com os demais profissionais. 
 
+## Projetos em Java Script 
 
-# 🛠 Ferramentas Utilizadas
-Estas são algumas das ferramentas utilizadas na empresa atualmente, tem como o foco fazer personalizações no sistema Sankhya. 
+| Título       | Descrição                         | 
+| :--------- | :---------------------------------- |
+| [Gerar notas de kits de produção] | O projeto foi utilizado para criar uma ação no ERP SankhyaOm e a ideia a princípio era apenas criar registros no sistema através de um dashboard, com isto foi criado um botão de ação para atender a demanda. |
+| Ajuste Valor DI | Com a importação notas fiscais de origem internacional, é necessário realizar o cálculo do valor da DI por NCM, sendo assim, foi necessário adicionar um campo para poder realizar o cálculo corretamente. 
 
-[![My Skills](https://skillicons.dev/icons?i=java,js,eclipse,git,gitlab)](https://skillicons.dev)
+## Projetos em Java
 
+| Título           | Descrição                         |
+| :---------       | :---------------------------------- |
+| [Serasa](https://github.com/EDUARDO-TEIXEIRA/Personalizacao-CIVITT/tree/main/A%C3%A7%C3%B5es%20Java/src/br/IntegracaoSerasa)           | Foi desenvolvido uma rotina onde o usuário é capaz de enviar/excluir títulos através do Sankhya selecionando alguns títulos no financeiro.|
+| [Cotação de Frete](https://github.com/EDUARDO-TEIXEIRA/Personalizacao-CIVITT/tree/main/A%C3%A7%C3%B5es%20Java/src/br/IntegracaoLinCros) | A integração consiste em selecionar registros no sistema e buscar pela transportadora que conter o menor valor do frete
+## Stack utilizada
 
-<table>
-<tr>
-  <th>ID Projeto</th>
-  <th>Descrição</th>
-  <th>Nota</th>
-</tr>
-<tr>
-  <td><a href="https://github.com/EDUARDO-TEIXEIRA/Personalizacao-CIVITT/blob/main/Opera%C3%A7%C3%B5es/GerarProdu%C3%A7%C3%A3oKits.js">CVT-001</a></td>
-  <td>Gerar Produção de Kit's</td>
-  <td>O projeto foi utilizado para criar uma ação no ERP SankhyaOm e a ideia a princípio era apenas criar registros no sistema através de um dashboard, com isto foi criado um botão de ação para atender a demanda.</td>
-<tr>
-  <td>CVT-002</td>
-  <td>Ignorar Rastreio de Encomendas</td>
-  <td>Atualmente temos um controle de rastreio de notas fiscais e pedidos, com a integração das transportadoras algumas dessas notas não são rastreáveis, sendo assim, é necessário um filtro desses registros. 
-</tr>
+[![My Skills](https://skillicons.dev/icons?i=java,git,eclipse,js,html,css,github&)](https://skillicons.dev)
 
-<tr>
-  <td>CVT-003</td>
-  <td>Excluir Ocorrências de Rastreio</td>
-  <td>Algumas notas fiscais não vão ter ocorrências automáticas de rastreio, sendo assim, foi necessário implementar um botão para que possa ser feito a inclusão manualmente, sendo assim, é necessário excluir também. 
-</tr>
-<tr>
-  <td><a href="https://github.com/EDUARDO-TEIXEIRA/Personalizacao-CIVITT/blob/main/Cont%C3%A1bil-Fiscal/AjusteValorDI.js">CVT-004</a></td>
-  <td>Ajuste Valor DI</td>
-  <td>Com a importação notas fiscais de origem internacional, é necessário realizar o cálculo do valor da DI por NCM, sendo assim, foi necessário adicionar um campo para poder realizar o cálculo corretamente.</td>
-</tr>
+## Referência
 
-</table>
+ - [Recipes Sankhya](https://developer.sankhya.com.br/recipes)
 
-## ✒️ Autores
-| [<img src="https://avatars.githubusercontent.com/u/34588048?v=4" width=115><br><sub>Eduardo Teixeira</sub>](https://github.com/eduardo-teixeira) 
-| :---: 
+## Contato
 
+####  Redes Sociais
+<a href="https://linkedin.com/in/eduardo-felicidade" target="_blank"><img align="left" alt="Aakarsh B | LinkedIn" width="22px" src="https://github.com/EDUARDO-TEIXEIRA/arquivos-midia/blob/main/linkedin.svg" /> 
+<a href="https://t.me/eduardoteixeira" target="_blank"><img width="23px" src="https://github.com/EDUARDO-TEIXEIRA/arquivos-midia/blob/main/telegram.svg"></a>
+<a href="https://www.instagram.com/eduardo_felic/" target="_blank">
+  <img align="left" alt="Aakarsh B | LinkedIn" width="22px" src="https://github.com/EDUARDO-TEIXEIRA/arquivos-midia/blob/main/instagram.svg"/> </a>
+  <a href="mailto:eduardo_teixeiraa@hotmail.com" target="_blank"><img align="left" alt="Aakarsh B | LinkedIn" width="22px" src="https://github.com/EDUARDO-TEIXEIRA/arquivos-midia/blob/main/email.svg"/> </a>
+<br/>

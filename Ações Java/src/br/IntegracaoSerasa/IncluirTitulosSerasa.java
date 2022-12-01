@@ -23,7 +23,6 @@ import br.com.sankhya.jape.vo.DynamicVO;
 import br.com.sankhya.modelcore.util.DynamicEntityNames;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 
-
 public class IncluirTitulosSerasa implements AcaoRotinaJava {
 	MensagemRetornoUtil msg = new MensagemRetornoUtil();
 	FinanceiroUtil financeiro = new FinanceiroUtil();
