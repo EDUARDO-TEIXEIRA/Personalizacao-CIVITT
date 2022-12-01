@@ -20,10 +20,7 @@ public class CalcularFrete implements AcaoRotinaJava {
 			}
 			IntegracaoLincros integracao = new IntegracaoLincros();
 			integracao.conexaoLincros(linhas);
-			if (integracao.getCnpjReturn() != null) {
-				registro.setCampo("CODPARCTRANSP", integracao.getCnpjReturn());
-				registro.save();	
-			}
+			
 		}
 	}
 
