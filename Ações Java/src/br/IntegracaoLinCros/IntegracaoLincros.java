@@ -28,7 +28,7 @@ import br.com.sankhya.modelcore.util.DynamicEntityNames;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 
 public class IntegracaoLincros {
-	private BigDecimal codParcTransportadora;
+	private BigDecimal codParcTransportadora = BigDecimal.valueOf(0);
 	private String nomeTransportadora = "";
 	private String cnpjTransportadora = "";
 	private boolean alterouTransportadora = false;
@@ -65,16 +65,22 @@ public class IntegracaoLincros {
 			this.nunota = new BigDecimal(cabecalhoNota.getCampo("NUNOTA").toString());
 			valor = new BigDecimal(cabecalhoNota.getCampo("VLRNOTA").toString());
 			volumes = new BigDecimal(cabecalhoNota.getCampo("QTDVOL").toString());
-			peso = new BigDecimal(cabecalhoNota.getCampo("PESO").toString());
-			codparc = new BigDecimal(cabecalhoNota.getCampo("CODPARC").toString());
 			
-			ParceiroUtil transportadora = new ParceiroUtil();
-			Collection<DynamicVO> traVo = transportadora.getParceiro(codparc) ;
+			if (cabecalhoNota.getCampo("PESO").toString() == null) {
+				peso = BigDecimal.valueOf(0);
+			} else {
+				peso = new BigDecimal(cabecalhoNota.getCampo("PESO").toString());
+			}
+			
+			codparc = new BigDecimal(cabecalhoNota.getCampo("CODPARC").toString());
+		
+			ParceiroUtil cliente = new ParceiroUtil();
+			Collection<DynamicVO> traVo = cliente.getParceiro(codparc) ;
 			for (DynamicVO dado : traVo) {
 				cep = dado.asString("CEP"); 
 			}
 		}
-    	
+
 		URL url = new URL("https://ws-tms.lincros.com/api/v3/calculo/calcularNota");
 		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 		connection.setRequestMethod("POST");
@@ -93,7 +99,7 @@ public class IntegracaoLincros {
 							   + "\r\n\t\"volumes\": " + volumes + ","
 							   + "\r\n\t\"abono\": 0,"
 							   + "\r\n\t\"percentualValorCliente\": 0,"
-							   + "\r\n\t\"cepOrigem\": 26168081,"
+							   + "\r\n\t\"cepOrigem\": 29168081,"
 							   + "\r\n\t\"cepDestino\": " + cep + ","
 							   + "\r\n\t\"modalidadeFrete\": 0,"
 							   + "\r\n\t\"tipoOperacao\": 1,"
@@ -111,37 +117,45 @@ public class IntegracaoLincros {
 			while ((responseLine = br.readLine()) != null) {
 				        response.append(responseLine.trim());
 			}
-			inserirLog(responseLine);
-		}
+			if (HttpURLConnection.HTTP_OK == connection.getResponseCode()) {
+				inserirLog(response.toString());
+			}
+			br.close();
+		} 
 	}
 	private BigDecimal getParcTransportadora (String cnpj) throws Exception {
-		NativeSql sql = new NativeSql(jdbc);
-		sql.setNamedParameter("P_CNPJ", cnpj);
-		sql.appendSql("SELECT CODPARC FROM TGFPAR WHERE CGC_CPF = :P_CNPJ");
-		ResultSet rs = sql.executeQuery();
+		ParceiroUtil transportadora = new ParceiroUtil();
+		Collection<DynamicVO> traVo = transportadora.getParceiro(cnpj);
 		
-		while (rs.next()) {
-			this.codParcTransportadora = rs.getBigDecimal("CODPARC");
+		for (DynamicVO linha : traVo) {
+			this.codParcTransportadora = linha.asBigDecimal("CODPARC");
 		}
 		return this.codParcTransportadora;
+		
 	}
 	
 	private void setTransportadoraCabecalhoPedido() throws Exception {
-		FinderWrapper finderCabecalhoNota = new FinderWrapper(DynamicEntityNames.CABECALHO_NOTA, "this.NUNOTA = ", new Object[] {this.nunota});
-     	Collection<PersistentLocalEntity> finderCabecalhoCPLE = this.dwf.findByDynamicFinder(finderCabecalhoNota);
-     	
-     	for (PersistentLocalEntity finderFinanceiroPLE  : finderCabecalhoCPLE) 
+		this.dwf = EntityFacadeFactory.getDWFFacade();
+		FinderWrapper finderCabecalhoNota = new FinderWrapper(DynamicEntityNames.CABECALHO_NOTA, "this.NUNOTA = ?", new Object[] {this.nunota});
+		Collection<PersistentLocalEntity> finderCabecalhoCPLE = this.dwf.findByDynamicFinder(finderCabecalhoNota);
+
+     	for (PersistentLocalEntity linha  : finderCabecalhoCPLE) 
      	{
-     		EntityVO cabEntityVO = finderFinanceiroPLE.getValueObject();
-     		DynamicVO cabVO = (DynamicVO) finderFinanceiroPLE;
-     		if (alterouTransportadora == true) {
-     			cabVO.setProperty("CODPARCTRANSP", this.codParcTransportadora);
-			}
-     		else {
-     			cabVO.setProperty("AD_TRANSPORTADORASUGERIDA", this.cnpjTransportadora + " - " + this.nomeTransportadora);	
-     		}
+     		this.codParcTransportadora = getParcTransportadora(this.cnpjTransportadora); // Procura uma transportadora
      		
-     		finderFinanceiroPLE.setValueObject((EntityVO) cabVO);
+     		EntityVO finderCabecalhoEVO = linha.getValueObject();
+    		DynamicVO cabVO = (DynamicVO) finderCabecalhoEVO;
+    		
+    		if (this.codParcTransportadora.signum() > 0) {
+				this.alterouTransportadora = true;
+			}
+    		if (this.alterouTransportadora) {
+    			cabVO.setProperty("CODPARCTRANSP", this.codParcTransportadora);	
+			}
+			
+			cabVO.setProperty("AD_TRANSPORTADORASUGERIDA", this.cnpjTransportadora + " - " + this.nomeTransportadora);
+
+    		linha.setValueObject((EntityVO) cabVO);
      	}
 	}
 	
@@ -149,47 +163,52 @@ public class IntegracaoLincros {
 
 		try {
 			JSONObject jsonRetorno = new JSONObject(json.toString());
-            JSONArray jsonArray =  jsonRetorno.getJSONArray("transportadoras");
+            
             this.dwf = EntityFacadeFactory.getDWFFacade();
 			DynamicVO logVo = (DynamicVO) this.dwf.getDefaultValueObjectInstance("AD_COTFRE");
 			jdbc = dwf.getJdbcWrapper();
 			jdbc.openSession();
-			if (1==1) {
-				throw new Exception("Vencemo familia!");
-			}
-            for (int i = 0; i < jsonArray.length(); i++) {
-            	JSONObject dadosTransportadora = jsonArray.getJSONObject(i);
+
+			if (!jsonRetorno.getString("status").equals("CALCULADO")) {
+				logVo.setProperty("NUNOTA", this.nunota);
+            	logVo.setProperty("SEQUENCIA", BigDecimal.valueOf(0));
+            	logVo.setProperty("DTCONSULTA",TimeUtils.getNow());
             	
-            	this.cnpjTransportadora = dadosTransportadora.getString("cnpj");
-            	this.nomeTransportadora = dadosTransportadora.getString("nome");
-            	
-            	if (i == 0 && this.codParcTransportadora.signum() == 0 ) {
-            		setTransportadoraCabecalhoPedido();
-				}
-            	
-            	if (codParcTransportadora.signum() > 0) {
-            		if (!this.alterouTransportadora) {
-            			setTransportadoraCabecalhoPedido();
-            			this.alterouTransportadora = true;
-    				}	
-				}
-            	
-            	logVo.setProperty("NUNOTA", this.nunota);
-				logVo.setProperty("DTCONSULTA",TimeUtils.getNow());
-            	logVo.setProperty("CNPJ", cnpjTransportadora);
-            	logVo.setProperty("JSONREQUEST", this.bodyResquest);
-            	logVo.setProperty("JSONRESPONSE", json);
-            	logVo.setProperty("VALOR", dadosTransportadora.getDouble("valor"));
+            	logVo.setProperty("JSONREQUEST", this.bodyResquest.toCharArray());
+            	char [] jsonConvertido = json.toCharArray();
+            	logVo.setProperty("JSONRESPONSE", jsonConvertido);
             	
             	PersistentLocalEntity createEntity = dwf.createEntity("AD_COTFRE", (EntityVO) logVo);
     			DynamicVO save = (DynamicVO) createEntity.getValueObject();
+			}else {
+
+				JSONArray jsonArray =  jsonRetorno.getJSONArray("transportadoras");
+	            for (int i = 0; i < jsonArray.length(); i++) {
+	            	JSONObject dadosTransportadora = jsonArray.getJSONObject(i);
+	            	
+	            	this.cnpjTransportadora = dadosTransportadora.getString("cnpj");
+	            	this.nomeTransportadora = dadosTransportadora.getString("nome");
+					
+	            	logVo.setProperty("NUNOTA", this.nunota);
+	            	logVo.setProperty("SEQUENCIA", BigDecimal.valueOf(i));
+	            	logVo.setProperty("DTCONSULTA", TimeUtils.getNow());
+	            	logVo.setProperty("CNPJ", cnpjTransportadora);
+	            	logVo.setProperty("JSONREQUEST", this.bodyResquest.toCharArray());
+	            	logVo.setProperty("PREVISAOENTREGA", dadosTransportadora.getString("previsaoEntrega"));
+	            	char [] jsonConvertido = json.toCharArray();
+	            	logVo.setProperty("JSONRESPONSE", jsonConvertido);
+	            	logVo.setProperty("VALOR", BigDecimal.valueOf(dadosTransportadora.getDouble("valor")));
+	    			
+	            	setTransportadoraCabecalhoPedido();
+	            	
+	            	PersistentLocalEntity createEntity = dwf.createEntity("AD_COTFRE", (EntityVO) logVo);
+	    			DynamicVO save = (DynamicVO) createEntity.getValueObject();
+				}
 			}
-            
 
 		} catch (Exception erro) {
 			throw new Exception("Não foi possível gravar o log da Lincros" + erro.toString());
-		}
-
+		} 
 		finally {
 			jdbc.closeSession();
 		}
