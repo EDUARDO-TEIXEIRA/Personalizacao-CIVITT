@@ -32,6 +32,7 @@ public class IntegracaoLincros {
 	private String nomeTransportadora = "";
 	private String cnpjTransportadora = "";
 	private boolean alterouTransportadora = false;
+	private String transportadoraSugerida = "";
 	
 	private BigDecimal nunota;
 	private String bodyResquest;
@@ -145,16 +146,16 @@ public class IntegracaoLincros {
      		
      		EntityVO finderCabecalhoEVO = linha.getValueObject();
     		DynamicVO cabVO = (DynamicVO) finderCabecalhoEVO;
-    		
+
     		if (this.codParcTransportadora.signum() > 0) {
 				this.alterouTransportadora = true;
 			}
     		if (this.alterouTransportadora) {
     			cabVO.setProperty("CODPARCTRANSP", this.codParcTransportadora);	
-			}
-			
-			cabVO.setProperty("AD_TRANSPORTADORASUGERIDA", this.cnpjTransportadora + " - " + this.nomeTransportadora);
-
+			} else {
+				cabVO.setProperty("AD_TRANSPORTADORASUGERIDA", this.transportadoraSugerida);
+			}	
+    		
     		linha.setValueObject((EntityVO) cabVO);
      	}
 	}
@@ -199,7 +200,12 @@ public class IntegracaoLincros {
 	            	logVo.setProperty("JSONRESPONSE", jsonConvertido);
 	            	logVo.setProperty("VALOR", BigDecimal.valueOf(dadosTransportadora.getDouble("valor")));
 	    			
-	            	setTransportadoraCabecalhoPedido();
+	            	if (!this.alterouTransportadora) {
+	            		if (i == 0) {
+	            			this.transportadoraSugerida = this.cnpjTransportadora + " - " + this.nomeTransportadora;	
+						}
+	            		setTransportadoraCabecalhoPedido();
+					}
 	            	
 	            	PersistentLocalEntity createEntity = dwf.createEntity("AD_COTFRE", (EntityVO) logVo);
 	    			DynamicVO save = (DynamicVO) createEntity.getValueObject();

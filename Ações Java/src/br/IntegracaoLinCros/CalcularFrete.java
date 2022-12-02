@@ -28,10 +28,10 @@ public class CalcularFrete implements AcaoRotinaJava {
 			ItensUtil itens = new ItensUtil();
 			Collection<DynamicVO> iteVo = itens.getItensNota((BigDecimal) registro.getCampo("NUNOTA"));
 			
-			if (iteVo.isEmpty()) {
+			for (DynamicVO linhaItem : iteVo) {
 				IntegracaoLincros integracao = new IntegracaoLincros();
 				integracao.conexaoLincros(linhas);	
-			} 	
+			}	
 		}
 	}
 

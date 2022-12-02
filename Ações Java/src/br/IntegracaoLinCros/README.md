@@ -27,7 +27,7 @@ O tempo média gasto, com as telas já abertas do Sankhya e da Lincros, uma vez 
 
 ### Estrutura do JSON de Retorno
 A API retorna o detalhamento dos impostos e taxas adicionais em um array, além disto é possível listar por ordem as transportadoras com menor valor conforme a imagem abaixo.
-![Estrutura Json](https://user-images.githubusercontent.com/34588048/204638958-6af5ed2f-a157-4961-9949-799eaaa3a97e.png)
+![Estrutura Json](https://user-images.githubusercontent.com/34588048/205348557-1f8a1085-9710-4c6f-9832-6c87a34f41cb.png)
 
 ## Demonstração
 
