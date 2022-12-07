@@ -3,41 +3,54 @@ package br.Testes;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.math.BigDecimal;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.json.JSONObject;
 
 public class TestesValores {
 
 	public static void main(String args[]) throws Exception {
-		URL url = new URL("https://ws-tms.lincros.com/api/v3/calculo/calcularNota");
-		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-		connection.setRequestMethod("POST");
-		connection.setRequestProperty("Authorization", "Bearer xxx");
-		connection.setRequestProperty("Content-Type", "application/json");
-		connection.setRequestProperty("Content-Length", "<calculated when request is sent>");
-		connection.setRequestProperty("Host", "<calculated when request is sent>");
-		connection.setDoOutput(true);
+		Map<BigDecimal, BigDecimal> meuMapa = new HashMap<>();
+		meuMapa.put(BigDecimal.valueOf(100), BigDecimal.valueOf(1132));
+		meuMapa.put(BigDecimal.valueOf(200), BigDecimal.valueOf(16245));
+		meuMapa.put(BigDecimal.valueOf(300), BigDecimal.valueOf(1132));
+		
+		Map<BigDecimal, List<BigDecimal>> groupedValues = new HashMap<>();
+		for (Entry<BigDecimal, BigDecimal> entry : meuMapa.entrySet()) {
+			BigDecimal value =  entry.getValue();
+			BigDecimal key = entry.getKey();
 
-		String bodyResquest = "{\r\n\t\"cnpjUnidade\": \"32463085000130\",\r\n\t\"remetente\": \"32463085000130\",\r\n\t\"peso\": 0.292,\r\n\t\"cubagem\": 0,\r\n\t\"pesoCubado\": 0,\r\n\t\"valor\": 191.42,\r\n\t\"volumes\": 0,\r\n\t\"abono\": 0,\r\n\t\"percentualValorCliente\": 0,\r\n\t\"cepOrigem\": 29168081,\r\n\t\"cepDestino\": 29164370,\r\n\t\"modalidadeFrete\": 0,\r\n\t\"tipoOperacao\": 1,\r\n\t\"transportadora\": \"\",\r\n\t\"placa\": \"\"\r\n}";
-
-		try (OutputStream os = connection.getOutputStream()) {
-			byte[] input = bodyResquest.getBytes("utf-8");
-			os.write(input, 0, input.length);
+			List<BigDecimal> indices = groupedValues.getOrDefault(value, new ArrayList<>());
+			indices.add(key);
+			groupedValues.put(value, indices);
 		}
-
-		try (BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "utf-8"))) {
-			StringBuilder response = new StringBuilder();
-			String responseLine = null;
-			while ((responseLine = br.readLine()) != null) {
-				response.append(responseLine.trim());
-			}
-			System.out.println(response.toString());
-			
-			JSONObject jsonRetorno = new JSONObject(response.toString());
-			System.out.println(jsonRetorno.getString("status"));
+		
+		for (Entry<BigDecimal, List<BigDecimal>> entry : groupedValues.entrySet()) {
+			System.out.println("Parceiro: "+ entry.getKey() + ", Pedido: " + entry.getValue() + ", Tamanho: " + entry.getKey()); 
 		}
+		String s = "(287732,25565)";
+		String replace = s.replace("(", "").replace(")", "");
+		StringTokenizer st = new StringTokenizer(s, ",");
+		
+		String parte1 = st.nextToken(); // retorna "Olá"
+		
+		System.out.println("Primeira Parte: " + st.nextToken().getClass());
+		
+
+		
 	}
 }

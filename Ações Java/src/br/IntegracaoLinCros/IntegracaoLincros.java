@@ -9,6 +9,9 @@ import java.net.URL;
 import java.sql.ResultSet;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -22,6 +25,7 @@ import br.com.sankhya.jape.bmp.PersistentLocalEntity;
 import br.com.sankhya.jape.dao.JdbcWrapper;
 import br.com.sankhya.jape.sql.NativeSql;
 import br.com.sankhya.jape.util.FinderWrapper;
+import br.com.sankhya.jape.util.JapeSessionContext;
 import br.com.sankhya.jape.vo.DynamicVO;
 import br.com.sankhya.jape.vo.EntityVO;
 import br.com.sankhya.modelcore.util.DynamicEntityNames;
@@ -33,14 +37,21 @@ public class IntegracaoLincros {
 	private String cnpjTransportadora = "";
 	private boolean alterouTransportadora = false;
 	private String transportadoraSugerida = "";
+	private String expressaoConsulta = "";
+
+	StringBuilder responseJsonAPI = new StringBuilder();
 	
-	private BigDecimal nunota;
 	private String bodyResquest;
 	
 	public EntityFacade dwf;
 	public JdbcWrapper jdbc = null;
 	
-
+	public void setExpressaoConsulta(String expressaoConsulta) {
+		this.expressaoConsulta = expressaoConsulta;
+	}
+	public String getExpressaoConsulta() {
+		return expressaoConsulta;
+	}
 	private String getOperador() throws Exception {
 		String token = "";
 		Collection<DynamicVO> filtroOperador = (Collection<DynamicVO>) EntityFacadeFactory.getDWFFacade()
@@ -55,31 +66,18 @@ public class IntegracaoLincros {
 		return token;
 	}
 
-	public void conexaoLincros(Registro[] registro) throws Exception {	
-		BigDecimal valor = new BigDecimal(0);
-		BigDecimal volumes = new BigDecimal(0); 
-		BigDecimal peso = new BigDecimal(0);
-		BigDecimal codparc = new BigDecimal(0);
+	public void conexaoLincros(BigDecimal codCliente, BigDecimal valorNota, BigDecimal pesoProdutos, BigDecimal qtdVolume) throws Exception {	
+		
+		BigDecimal valor = valorNota;
+		BigDecimal volumes = qtdVolume; 
+		BigDecimal peso = pesoProdutos;
+		BigDecimal codparc = codCliente;
 		String cep = "";
 	
-		for (Registro cabecalhoNota : registro) {
-			this.nunota = new BigDecimal(cabecalhoNota.getCampo("NUNOTA").toString());
-			valor = new BigDecimal(cabecalhoNota.getCampo("VLRNOTA").toString());
-			volumes = new BigDecimal(cabecalhoNota.getCampo("QTDVOL").toString());
-			
-			if (cabecalhoNota.getCampo("PESO").toString() == null) {
-				peso = BigDecimal.valueOf(0);
-			} else {
-				peso = new BigDecimal(cabecalhoNota.getCampo("PESO").toString());
-			}
-			
-			codparc = new BigDecimal(cabecalhoNota.getCampo("CODPARC").toString());
-		
-			ParceiroUtil cliente = new ParceiroUtil();
-			Collection<DynamicVO> traVo = cliente.getParceiro(codparc) ;
-			for (DynamicVO dado : traVo) {
-				cep = dado.asString("CEP"); 
-			}
+		ParceiroUtil cliente = new ParceiroUtil();
+		Collection<DynamicVO> traVo = cliente.getParceiro(codparc) ;
+		for (DynamicVO dado : traVo) {
+			cep = dado.asString("CEP"); 
 		}
 
 		URL url = new URL("https://ws-tms.lincros.com/api/v3/calculo/calcularNota");
@@ -94,18 +92,12 @@ public class IntegracaoLincros {
 		this.bodyResquest = "{\r\n\t\"cnpjUnidade\": \"32463085000130\","
 							   + "\r\n\t\"remetente\": \"32463085000130\","
 							   + "\r\n\t\"peso\": " + peso + ","
-							   + "\r\n\t\"cubagem\": 0,"
-							   + "\r\n\t\"pesoCubado\": 0,"
 							   + "\r\n\t\"valor\": " + valor + ","
 							   + "\r\n\t\"volumes\": " + volumes + ","
-							   + "\r\n\t\"abono\": 0,"
-							   + "\r\n\t\"percentualValorCliente\": 0,"
 							   + "\r\n\t\"cepOrigem\": 29168081,"
 							   + "\r\n\t\"cepDestino\": " + cep + ","
 							   + "\r\n\t\"modalidadeFrete\": 0,"
-							   + "\r\n\t\"tipoOperacao\": 1,"
-							   + "\r\n\t\"transportadora\": \"\","
-							   + "\r\n\t\"placa\": \"\"\r\n}";
+							   + "\r\n\t\"tipoOperacao\": 1}";
 
 		try(OutputStream os = connection.getOutputStream()) {
 		    byte[] input = bodyResquest.getBytes("utf-8");
@@ -113,15 +105,17 @@ public class IntegracaoLincros {
 		}
 		
 		try(BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "utf-8"))) {
-			StringBuilder response = new StringBuilder();
+			
 			String responseLine = null;
 			while ((responseLine = br.readLine()) != null) {
-				        response.append(responseLine.trim());
+				        responseJsonAPI.append(responseLine.trim());
 			}
-			if (HttpURLConnection.HTTP_OK == connection.getResponseCode()) {
-				inserirLog(response.toString());
-			}
+			if (HttpURLConnection.HTTP_OK != connection.getResponseCode()) {
+				throw new Exception("Erro de Conexão com a Lincros");	
+			} 
 			br.close();
+			
+			inserirLog();
 		} 
 	}
 	private BigDecimal getParcTransportadora (String cnpj) throws Exception {
@@ -132,14 +126,13 @@ public class IntegracaoLincros {
 			this.codParcTransportadora = linha.asBigDecimal("CODPARC");
 		}
 		return this.codParcTransportadora;
-		
 	}
 	
 	private void setTransportadoraCabecalhoPedido() throws Exception {
 		this.dwf = EntityFacadeFactory.getDWFFacade();
-		FinderWrapper finderCabecalhoNota = new FinderWrapper(DynamicEntityNames.CABECALHO_NOTA, "this.NUNOTA = ?", new Object[] {this.nunota});
+		FinderWrapper finderCabecalhoNota = new FinderWrapper(DynamicEntityNames.CABECALHO_NOTA, "this.NUNOTA IN " + expressaoConsulta  );
 		Collection<PersistentLocalEntity> finderCabecalhoCPLE = this.dwf.findByDynamicFinder(finderCabecalhoNota);
-
+		
      	for (PersistentLocalEntity linha  : finderCabecalhoCPLE) 
      	{
      		this.codParcTransportadora = getParcTransportadora(this.cnpjTransportadora); // Procura uma transportadora
@@ -157,13 +150,15 @@ public class IntegracaoLincros {
 			}	
     		
     		linha.setValueObject((EntityVO) cabVO);
+
      	}
-	}
-	
-	private void inserirLog(String json) throws Exception {
+	}	
+	private void inserirLog() throws Exception {
+		String notasReplace = expressaoConsulta.replace("(", "").replace(")", "");
+		BigDecimal codusulogado = (BigDecimal) JapeSessionContext.getRequiredProperty("usuario_logado");
 
 		try {
-			JSONObject jsonRetorno = new JSONObject(json.toString());
+			JSONObject jsonRetorno = new JSONObject(responseJsonAPI.toString());
             
             this.dwf = EntityFacadeFactory.getDWFFacade();
 			DynamicVO logVo = (DynamicVO) this.dwf.getDefaultValueObjectInstance("AD_COTFRE");
@@ -171,53 +166,67 @@ public class IntegracaoLincros {
 			jdbc.openSession();
 
 			if (!jsonRetorno.getString("status").equals("CALCULADO")) {
-				logVo.setProperty("NUNOTA", this.nunota);
-            	logVo.setProperty("SEQUENCIA", BigDecimal.valueOf(0));
-            	logVo.setProperty("DTCONSULTA",TimeUtils.getNow());
+				NativeSql sql = new NativeSql(jdbc);
             	
-            	logVo.setProperty("JSONREQUEST", this.bodyResquest.toCharArray());
-            	char [] jsonConvertido = json.toCharArray();
-            	logVo.setProperty("JSONRESPONSE", jsonConvertido);
-            	
-            	PersistentLocalEntity createEntity = dwf.createEntity("AD_COTFRE", (EntityVO) logVo);
-    			DynamicVO save = (DynamicVO) createEntity.getValueObject();
+            	ResultSet rs = sql.executeQuery("SELECT NUNOTA FROM TGFCAB CAB WHERE NUNOTA IN " + expressaoConsulta);
+				while (rs.next()) {
+					logVo.setProperty("NUNOTA", rs.getBigDecimal("NUNOTA"));
+					logVo.setProperty("SEQUENCIA", BigDecimal.valueOf(0));
+					logVo.setProperty("DTCONSULTA", TimeUtils.getNow());
+
+					logVo.setProperty("JSONREQUEST", this.bodyResquest.toCharArray());
+					char[] jsonConvertido = responseJsonAPI.toString().toCharArray();
+					logVo.setProperty("JSONRESPONSE", jsonConvertido);
+					logVo.setProperty("CODUSU", codusulogado);
+					PersistentLocalEntity createEntity = dwf.createEntity("AD_COTFRE", (EntityVO) logVo);
+					DynamicVO save = (DynamicVO) createEntity.getValueObject();
+				}
 			}else {
 
 				JSONArray jsonArray =  jsonRetorno.getJSONArray("transportadoras");
 	            for (int i = 0; i < jsonArray.length(); i++) {
+	            	
 	            	JSONObject dadosTransportadora = jsonArray.getJSONObject(i);
 	            	
 	            	this.cnpjTransportadora = dadosTransportadora.getString("cnpj");
 	            	this.nomeTransportadora = dadosTransportadora.getString("nome");
-					
-	            	logVo.setProperty("NUNOTA", this.nunota);
-	            	logVo.setProperty("SEQUENCIA", BigDecimal.valueOf(i));
-	            	logVo.setProperty("DTCONSULTA", TimeUtils.getNow());
-	            	logVo.setProperty("CNPJ", cnpjTransportadora);
-	            	logVo.setProperty("JSONREQUEST", this.bodyResquest.toCharArray());
-	            	logVo.setProperty("PREVISAOENTREGA", dadosTransportadora.getString("previsaoEntrega"));
-	            	char [] jsonConvertido = json.toCharArray();
-	            	logVo.setProperty("JSONRESPONSE", jsonConvertido);
-	            	logVo.setProperty("VALOR", BigDecimal.valueOf(dadosTransportadora.getDouble("valor")));
-	    			
+	            	// Inserir a transportadora várias vezes 
+	            	NativeSql sql = new NativeSql(jdbc);
+	            	ResultSet rs = sql.executeQuery("SELECT NUNOTA FROM TGFCAB CAB WHERE NUNOTA IN " + expressaoConsulta);
+	            	
+	            	while (rs.next()) {
+	            		logVo.setProperty("NUNOTA", rs.getBigDecimal("NUNOTA"));
+	            		logVo.setProperty("SEQUENCIA", BigDecimal.valueOf(i));
+		            	logVo.setProperty("DTCONSULTA", TimeUtils.getNow());
+		            	logVo.setProperty("CNPJ", cnpjTransportadora);
+		            	logVo.setProperty("NOMETRANSPORTADORA", nomeTransportadora);
+		            	logVo.setProperty("JSONREQUEST", this.bodyResquest.toCharArray());
+		            	logVo.setProperty("PREVISAOENTREGA", dadosTransportadora.getString("previsaoEntrega"));
+		            	char [] jsonConvertido = responseJsonAPI.toString().toCharArray();
+		            	logVo.setProperty("JSONRESPONSE", jsonConvertido);
+		            	logVo.setProperty("NUNOTAGROUP", notasReplace);
+		            	logVo.setProperty("CODUSU", codusulogado);
+		            	logVo.setProperty("VALOR", BigDecimal.valueOf(dadosTransportadora.getDouble("valor")));
+
+		            	PersistentLocalEntity createEntity = dwf.createEntity("AD_COTFRE", (EntityVO) logVo);
+		    			DynamicVO save = (DynamicVO) createEntity.getValueObject();
+	            	}	
+
 	            	if (!this.alterouTransportadora) {
 	            		if (i == 0) {
 	            			this.transportadoraSugerida = this.cnpjTransportadora + " - " + this.nomeTransportadora;	
 						}
 	            		setTransportadoraCabecalhoPedido();
 					}
-	            	
-	            	PersistentLocalEntity createEntity = dwf.createEntity("AD_COTFRE", (EntityVO) logVo);
-	    			DynamicVO save = (DynamicVO) createEntity.getValueObject();
 				}
 			}
 
 		} catch (Exception erro) {
-			throw new Exception("Não foi possível gravar o log da Lincros" + erro.toString());
+			throw new Exception("Não foi possível gravar o log da Lincros<br/><b>ERRO:<b/> " + erro.toString());
 		} 
 		finally {
 			jdbc.closeSession();
 		}
 	}
-
+	
 }
