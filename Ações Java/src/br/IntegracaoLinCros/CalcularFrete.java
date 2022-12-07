@@ -26,12 +26,9 @@ public class CalcularFrete implements AcaoRotinaJava {
 		if (linhas.length == 0) {
 			throw new Exception("Selecione um pedido de vendas");
 		}
-		// Popula o map
+		// Popula o map e lista os registros
 		Map<BigDecimal, BigDecimal> map = new HashMap<>();
 		for (Registro registro : linhas) {
-			if (!registro.getCampo("TIPMOV").equals("P")) {
-				throw new Exception("Não é possível calcular frete de registros que não sejam pedidos de vendas");
-			}
 			map.put((BigDecimal)registro.getCampo("NUNOTA"), (BigDecimal)registro.getCampo("CODPARC"));
 		}
 		// Agrupa o pedido dos parceiros

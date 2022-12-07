@@ -7,6 +7,8 @@
 
 Atualmente as cotações são realizadas manualmente, ou seja, acesso a plataforma web, envio algumas informações necessárias para que o sistema da Lincros realize as cotações e informe a melhor transportadora, e apos acesso o pedido de venda que já foi separado pelo WMS, ou seja, pronto para ser faturado, e vinculo a transportadora a este pedido.
 
+![fluxograma](https://user-images.githubusercontent.com/34588048/206234921-8f2c282d-ec3e-4e08-8430-4e961d18a366.png)
+
 ## Dados Estatíticos
 Foram Faturadas em 2022 uma média de mais de 1300 notas/Mês, o que resulta em um esforço de aproximadamente 22 horas/mês somente para realizar a cotação de frete.
 
@@ -32,17 +34,6 @@ A API retorna o detalhamento dos impostos e taxas adicionais em um array, além 
 ## Demonstração
 
 Insira um gif ou um link de alguma demonstração
-
-
-## FAQ
-
-#### É possível buscar mais de uma única vez o frete de um registro?
-Sim, visto que a cada solicitação será armazenado no log de operações.
-
-#### Caso não tenha nenhuma transportadora vinculada
-
-Resposta 2
-
 
 ## Stakeholders
 
