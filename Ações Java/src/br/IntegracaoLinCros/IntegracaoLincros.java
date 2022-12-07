@@ -165,58 +165,43 @@ public class IntegracaoLincros {
 			jdbc = dwf.getJdbcWrapper();
 			jdbc.openSession();
 
-			if (!jsonRetorno.getString("status").equals("CALCULADO")) {
-				NativeSql sql = new NativeSql(jdbc);
-            	
-            	ResultSet rs = sql.executeQuery("SELECT NUNOTA FROM TGFCAB CAB WHERE NUNOTA IN " + expressaoConsulta);
-				while (rs.next()) {
-					logVo.setProperty("NUNOTA", rs.getBigDecimal("NUNOTA"));
-					logVo.setProperty("SEQUENCIA", BigDecimal.valueOf(0));
-					logVo.setProperty("DTCONSULTA", TimeUtils.getNow());
+			if (jsonRetorno.getString("status").equals("CALCULADO")) {
 
-					logVo.setProperty("JSONREQUEST", this.bodyResquest.toCharArray());
-					char[] jsonConvertido = responseJsonAPI.toString().toCharArray();
-					logVo.setProperty("JSONRESPONSE", jsonConvertido);
-					logVo.setProperty("CODUSU", codusulogado);
-					PersistentLocalEntity createEntity = dwf.createEntity("AD_COTFRE", (EntityVO) logVo);
-					DynamicVO save = (DynamicVO) createEntity.getValueObject();
-				}
-			}else {
+				JSONArray jsonArray = jsonRetorno.getJSONArray("transportadoras");
+				for (int i = 0; i < jsonArray.length(); i++) {
 
-				JSONArray jsonArray =  jsonRetorno.getJSONArray("transportadoras");
-	            for (int i = 0; i < jsonArray.length(); i++) {
-	            	
-	            	JSONObject dadosTransportadora = jsonArray.getJSONObject(i);
-	            	
-	            	this.cnpjTransportadora = dadosTransportadora.getString("cnpj");
-	            	this.nomeTransportadora = dadosTransportadora.getString("nome");
-	            	// Inserir a transportadora várias vezes 
-	            	NativeSql sql = new NativeSql(jdbc);
-	            	ResultSet rs = sql.executeQuery("SELECT NUNOTA FROM TGFCAB CAB WHERE NUNOTA IN " + expressaoConsulta);
-	            	
-	            	while (rs.next()) {
-	            		logVo.setProperty("NUNOTA", rs.getBigDecimal("NUNOTA"));
-	            		logVo.setProperty("SEQUENCIA", BigDecimal.valueOf(i));
-		            	logVo.setProperty("DTCONSULTA", TimeUtils.getNow());
-		            	logVo.setProperty("CNPJ", cnpjTransportadora);
-		            	logVo.setProperty("NOMETRANSPORTADORA", nomeTransportadora);
-		            	logVo.setProperty("JSONREQUEST", this.bodyResquest.toCharArray());
-		            	logVo.setProperty("PREVISAOENTREGA", dadosTransportadora.getString("previsaoEntrega"));
-		            	char [] jsonConvertido = responseJsonAPI.toString().toCharArray();
-		            	logVo.setProperty("JSONRESPONSE", jsonConvertido);
-		            	logVo.setProperty("NUNOTAGROUP", notasReplace);
-		            	logVo.setProperty("CODUSU", codusulogado);
-		            	logVo.setProperty("VALOR", BigDecimal.valueOf(dadosTransportadora.getDouble("valor")));
+					JSONObject dadosTransportadora = jsonArray.getJSONObject(i);
 
-		            	PersistentLocalEntity createEntity = dwf.createEntity("AD_COTFRE", (EntityVO) logVo);
-		    			DynamicVO save = (DynamicVO) createEntity.getValueObject();
-	            	}	
+					this.cnpjTransportadora = dadosTransportadora.getString("cnpj");
+					this.nomeTransportadora = dadosTransportadora.getString("nome");
+					// Inserir a transportadora várias vezes
+					NativeSql sql = new NativeSql(jdbc);
+					ResultSet rs = sql
+							.executeQuery("SELECT NUNOTA FROM TGFCAB CAB WHERE NUNOTA IN " + expressaoConsulta);
 
-	            	if (!this.alterouTransportadora) {
-	            		if (i == 0) {
-	            			this.transportadoraSugerida = this.cnpjTransportadora + " - " + this.nomeTransportadora;	
+					while (rs.next()) {
+						logVo.setProperty("NUNOTA", rs.getBigDecimal("NUNOTA"));
+						logVo.setProperty("SEQUENCIA", BigDecimal.valueOf(i));
+						logVo.setProperty("DTCONSULTA", TimeUtils.getNow());
+						logVo.setProperty("CNPJ", cnpjTransportadora);
+						logVo.setProperty("NOMETRANSPORTADORA", nomeTransportadora);
+						logVo.setProperty("JSONREQUEST", this.bodyResquest.toCharArray());
+						logVo.setProperty("PREVISAOENTREGA", dadosTransportadora.getString("previsaoEntrega"));
+						char[] jsonConvertido = responseJsonAPI.toString().toCharArray();
+						logVo.setProperty("JSONRESPONSE", jsonConvertido);
+						logVo.setProperty("NUNOTAGROUP", notasReplace);
+						logVo.setProperty("CODUSU", codusulogado);
+						logVo.setProperty("VALOR", BigDecimal.valueOf(dadosTransportadora.getDouble("valor")));
+
+						PersistentLocalEntity createEntity = dwf.createEntity("AD_COTFRE", (EntityVO) logVo);
+						DynamicVO save = (DynamicVO) createEntity.getValueObject();
+					}
+
+					if (!this.alterouTransportadora) {
+						if (i == 0) {
+							this.transportadoraSugerida = this.cnpjTransportadora + " - " + this.nomeTransportadora;
 						}
-	            		setTransportadoraCabecalhoPedido();
+						setTransportadoraCabecalhoPedido();
 					}
 				}
 			}
