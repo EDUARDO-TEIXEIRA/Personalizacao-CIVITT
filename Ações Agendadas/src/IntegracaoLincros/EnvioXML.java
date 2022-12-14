@@ -1,11 +1,16 @@
 package IntegracaoLincros;
 
 import java.nio.file.Files;
+
+import com.sankhya.util.SessionFile;
+import com.sankhya.util.UIDGenerator;
+
 import java.io.File;
 import Util.ArquivosUtil;
 import Util.CabecalhoNotaUtil;
 import br.com.sankhya.extensions.actionbutton.AcaoRotinaJava;
 import br.com.sankhya.extensions.actionbutton.ContextoAcao;
+import br.com.sankhya.ws.ServiceContext;
 
 public class EnvioXML implements AcaoRotinaJava {
 	@Override
@@ -18,7 +23,7 @@ public class EnvioXML implements AcaoRotinaJava {
 		
 		byte [] dados = Files.readAllBytes (file.toPath ());
 		IntegracaoLincros.conexaoHTTP(dados);
-		
+				
 		/********************************************************************************/
 		 // O snipper abaixo é possível obter os dados 
 		 // String chave = "text_" + UIDGenerator.getNextID();

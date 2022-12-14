@@ -11,5 +11,7 @@
 	<classpathentry kind="lib" path="C:/Users/eduardo.teixeira/EUROPA COMERCIAL LTDA/TECNOLOGIA DA INFORMAÇÃO - Documents/DESENVOLVIMENTO/PROJETOS JAVA SNK/LIBS/mge-modelcore.jar"/>
 	<classpathentry kind="lib" path="C:/Users/eduardo.teixeira/EUROPA COMERCIAL LTDA/TECNOLOGIA DA INFORMAÇÃO - Documents/DESENVOLVIMENTO/PROJETOS JAVA SNK/LIBS/SankhyaW-extensions.jar"/>
 	<classpathentry kind="lib" path="C:/Users/eduardo.teixeira/EUROPA COMERCIAL LTDA/TECNOLOGIA DA INFORMAÇÃO - Documents/DESENVOLVIMENTO/PROJETOS JAVA SNK/LIBS/sanutil.jar"/>
+	<classpathentry kind="lib" path="C:/Users/eduardo.teixeira/EUROPA COMERCIAL LTDA/TECNOLOGIA DA INFORMAÇÃO - Documents/DESENVOLVIMENTO/PROJETOS JAVA SNK/LIBS/sanws.jar"/>
+	<classpathentry kind="lib" path="C:/Users/eduardo.teixeira/Downloads/FRUTMEL/libs"/>
 	<classpathentry kind="output" path=""/>
 </classpath>
