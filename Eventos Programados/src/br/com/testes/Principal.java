@@ -19,8 +19,14 @@ public class Principal {
 	    SATURDAY
 	}
 public static void main(String[] args) {
-	for (DaysOfWeekEnum  day : DaysOfWeekEnum.values()) { 
-	    System.out.println(day); 
+	int [] tiposNegociacao = {1362, 1363, 1364, 
+			  1365, 1366, 1367, 
+			  1368, 1369, 1370, 
+			  1371, 1372, 1373, 
+			  1374, 1375, 1376, 1377};
+	for (int i = 0; i < tiposNegociacao.length; i++) {
+		System.out.println("Número do índice " + tiposNegociacao[i]);
+		
 	}
 }
 }

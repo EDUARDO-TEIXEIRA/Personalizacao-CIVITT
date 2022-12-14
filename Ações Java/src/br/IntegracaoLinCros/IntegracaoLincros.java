@@ -135,6 +135,7 @@ public class IntegracaoLincros {
 		
      	for (PersistentLocalEntity linha  : finderCabecalhoCPLE) 
      	{
+     		
      		this.codParcTransportadora = getParcTransportadora(this.cnpjTransportadora); // Procura uma transportadora
      		
      		EntityVO finderCabecalhoEVO = linha.getValueObject();
@@ -143,6 +144,22 @@ public class IntegracaoLincros {
     		if (this.codParcTransportadora.signum() > 0) {
 				this.alterouTransportadora = true;
 			}
+    		/***********************************************************************
+    		 * Comentário: Eduardo Teixeira, em 07 de Dezembro de 2022
+    		 * 
+    		 * Caso a transportadora não foi encontrada, será verificado se a raíz do 
+    		 * CNPJ é igual a da MIRA TRANSPORTES visto que no sistema temos vários 
+    		 * cadastrados desta transportadora, sendo assim, será enviado o código 
+    		 * correto do sistema. (16045).
+    		 * */
+    		/*
+    		if (this.codParcTransportadora.signum() == 0) {
+				if (this.cnpjTransportadora.substring(0,8).equals("58506155")) {
+					this.alterouTransportadora = true;
+					this.codParcTransportadora = BigDecimal.valueOf(16045);  
+				}
+			}*/
+    		
     		if (this.alterouTransportadora) {
     			cabVO.setProperty("CODPARCTRANSP", this.codParcTransportadora);	
 			} else {
@@ -195,13 +212,13 @@ public class IntegracaoLincros {
 
 						PersistentLocalEntity createEntity = dwf.createEntity("AD_COTFRE", (EntityVO) logVo);
 						DynamicVO save = (DynamicVO) createEntity.getValueObject();
-					}
-
-					if (!this.alterouTransportadora) {
-						if (i == 0) {
-							this.transportadoraSugerida = this.cnpjTransportadora + " - " + this.nomeTransportadora;
+						
+						if (!this.alterouTransportadora) {
+							if (i == 0) {
+								this.transportadoraSugerida = this.cnpjTransportadora + " - " + this.nomeTransportadora;
+							}
+							setTransportadoraCabecalhoPedido();
 						}
-						setTransportadoraCabecalhoPedido();
 					}
 				}
 			}
