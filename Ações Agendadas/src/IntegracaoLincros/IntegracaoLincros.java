@@ -15,10 +15,9 @@ import Util.PreferenciaSistemaUtil;
 import br.com.sankhya.ws.ServiceContext;
 
 public abstract class IntegracaoLincros {
-	
+
 	public static void conexaoHTTP(byte[] arquivozip) throws Exception {
-		
-		
+
 		int contentLength = arquivozip.length;
 		String boundary = "--------------------------" + System.currentTimeMillis();
 		URL url = new URL("https://deployment.transpofrete.com.br/api//importacaoXML/upload");
@@ -43,21 +42,14 @@ public abstract class IntegracaoLincros {
 			String chave = "text_" + UIDGenerator.getNextID();
 			SessionFile sessionFile = SessionFile.createSessionFile("arquivo.zip", "zip", arquivozip);
 			ServiceContext.getCurrent().putHttpSessionAttribute(chave, sessionFile);
+			
 			throw new Exception(MensagemExceptionUtil.getMensagemResponseCode(connection.getResponseCode())
 					+ "<br>"
 					+ "<br>--------- DADOS DA REQUISIÇÃO ---------"
 					+ "<br>- Tipo de Dado enviado: " + encodedFile.getClass()
-					+ "<br>- Arquivo em Base64: " + encodedFile
 					+ "<br>- Tamanho do Arquivo ZIP: " + Integer.toString(contentLength) 
-					+ "<br>- Bondary: " + boundary 
-					+ "<br/>" 
-					+ "<a id=\"alink\" href=\"/mge/visualizadorArquivos.mge?chaveArquivo=" + chave + "\" target=\"_blank\">Baixar Arquivo "
-
-		 								
-		 // 
-		 // contexto.setMensagemRetorno();
-					
-			);
+					+ "<br>- Bondary: " + boundary 					
+					);
 		} 
 		
 		try (BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "utf-8"))) {

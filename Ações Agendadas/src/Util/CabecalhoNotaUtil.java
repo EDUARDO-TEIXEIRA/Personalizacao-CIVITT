@@ -2,8 +2,6 @@ package Util;
 
 import java.io.File;
 import java.math.BigDecimal;
-import java.sql.Blob;
-import java.sql.Clob;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +10,6 @@ import br.com.sankhya.jape.EntityFacade;
 import br.com.sankhya.jape.dao.JdbcWrapper;
 import br.com.sankhya.jape.sql.NativeSql;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
-import com.sankhya.util.ZipUtils;
 
 
 public class CabecalhoNotaUtil{
