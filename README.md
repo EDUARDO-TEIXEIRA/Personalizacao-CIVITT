@@ -15,10 +15,31 @@ Neste repositório será adicionado os projetos desenvolvidos para atender deman
 
 ## Projetos em Java
 
-| Título           | Descrição                         |
-| :---------       | :---------------------------------- |
-| [Serasa](https://github.com/EDUARDO-TEIXEIRA/Personalizacao-CIVITT/tree/main/A%C3%A7%C3%B5es%20Java/src/br/IntegracaoSerasa)           | Foi desenvolvido uma rotina onde o usuário é capaz de enviar/excluir títulos através do Sankhya selecionando alguns títulos no financeiro.|
-| [Cotação de Frete](https://github.com/EDUARDO-TEIXEIRA/Personalizacao-CIVITT/tree/main/A%C3%A7%C3%B5es%20Java/src/br/IntegracaoLinCros) | A integração consiste em selecionar registros no sistema e buscar pela transportadora que conter o menor valor do frete
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Título</th>
+<th style="text-align:left">Descrição</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><a href="https://github.com/EDUARDO-TEIXEIRA/Personalizacao-CIVITT/tree/main/A%C3%A7%C3%B5es%20Java/src/br/IntegracaoSerasa">Serasa</a></td>
+<td style="text-align:left">Foi desenvolvido uma rotina onde o usuário é capaz de enviar/excluir títulos através do Sankhya selecionando alguns títulos no financeiro.</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="https://github.com/EDUARDO-TEIXEIRA/Personalizacao-CIVITT/tree/main/A%C3%A7%C3%B5es%20Java/src/br/IntegracaoLinCros">Cotação de Frete</a></td>
+<td style="text-align:left">A integração consiste em selecionar registros no sistema e buscar pela transportadora que conter o menor valor do frete</td>
+</tr>
+<tr>
+<td style="text-align:left"><a href="https://github.com/EDUARDO-TEIXEIRA/Personalizacao-CIVITT/edit/main/Eventos%20Programados/src/CabecalhoNota/readme.md">Envio de XML</a></td>
+<td style="text-align:left">Ao realizar o envio da NF-e a SEFAZ o sistema dispara um evento de transmissão do XML a plataforma da Lincros.</td>
+</tr>
+
+</tbody>
+</table>
+
+
 ## Stack utilizada
 
 [![My Skills](https://skillicons.dev/icons?i=java,git,eclipse,js,html,css,github&)](https://skillicons.dev)
