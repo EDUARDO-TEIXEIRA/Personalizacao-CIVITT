@@ -34,7 +34,7 @@ public class AtualizaTransportadoraPreferencial implements EventoProgramavelJava
 	public enum Sudeste {
 		RJ, SP;
 		BigDecimal getTransportadora() {
-			return BigDecimal.valueOf(4691); // SOLARE ADMINISTRACAO E CONSULTORIA LTDA - EPP
+			return BigDecimal.valueOf(4661); // SOLARE ADMINISTRACAO E CONSULTORIA LTDA - EPP
 		}
 	}
 	public enum Sul {

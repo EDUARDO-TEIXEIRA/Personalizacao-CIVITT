@@ -89,7 +89,7 @@ public class CabecalhoNotaUtil {
 		} finally {
 			jdbc.closeSession();
 		}
-
 	}
+	
 	
 }
