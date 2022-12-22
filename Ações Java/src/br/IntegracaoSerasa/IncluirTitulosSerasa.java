@@ -48,7 +48,7 @@ public class IncluirTitulosSerasa implements AcaoRotinaJava {
 		Registro[] linhas = contexto.getLinhas();
 		
 		if (linhas.length == 0 ) {
-			throw new Exception("Selecione uma linha");
+			throw new Exception("Selecione um registro");
 			//msg.exibirErro("Operação inválida","Selecione uma linha", null);
 		}
 		

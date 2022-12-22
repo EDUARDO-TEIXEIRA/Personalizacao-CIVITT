@@ -4,8 +4,10 @@ import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.Iterator;
 
 import br.com.sankhya.jape.EntityFacade;
+import br.com.sankhya.jape.bmp.PersistentLocalEntity;
 import br.com.sankhya.jape.core.JapeSession;
 import br.com.sankhya.jape.dao.JdbcWrapper;
 import br.com.sankhya.jape.sql.NativeSql;
@@ -14,6 +16,8 @@ import br.com.sankhya.jape.vo.DynamicVO;
 import br.com.sankhya.jape.wrapper.JapeFactory;
 import br.com.sankhya.jape.wrapper.JapeWrapper;
 import br.com.sankhya.modelcore.MGEModelException;
+import br.com.sankhya.modelcore.comercial.impostos.ImpostosHelpper;
+import br.com.sankhya.modelcore.dwfdata.vo.ItemNotaVO;
 import br.com.sankhya.modelcore.util.DynamicEntityNames;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 
@@ -90,6 +94,23 @@ public class CabecalhoNotaUtil {
 			jdbc.closeSession();
 		}
 	}
-	
+	public static void calcularImposto(BigDecimal nunota) throws Exception {
+		ImpostosHelpper helpper = new ImpostosHelpper();
+		EntityFacade dwfEntityFacade = EntityFacadeFactory.getDWFFacade();
+		Collection<?> iteproduto = dwfEntityFacade.findByDynamicFinder(new FinderWrapper("ItemNota", "this.NUNOTA = ? and this.SEQUENCIA>0 ", new Object[] { nunota }));
+
+		for (Iterator<?> itepro = iteproduto.iterator(); itepro.hasNext();) {
+			PersistentLocalEntity iteproEntity = (PersistentLocalEntity)itepro.next();
+			ItemNotaVO iteproVO = (ItemNotaVO)((DynamicVO)iteproEntity.getValueObject()).wrapInterface(ItemNotaVO.class);
+			helpper.calcularImpostosItem(iteproVO, iteproVO.asBigDecimal("CODPROD"));
+			iteproEntity.setValueObject(iteproVO);
+		}
+		helpper.forcaRecalculoBaseISS(true);
+		helpper.calcularImpostos(nunota);
+		helpper.carregarNota(nunota);
+		helpper.calcularPIS();
+		helpper.calcularCOFINS();
+		
+	}
 	
 }

@@ -32,7 +32,7 @@ Neste repositório será adicionado os projetos desenvolvidos para atender deman
 <td style="text-align:left">A integração consiste em selecionar registros no sistema e buscar pela transportadora que conter o menor valor do frete</td>
 </tr>
 <tr>
-<td style="text-align:left"><a href="https://github.com/EDUARDO-TEIXEIRA/Personalizacao-CIVITT/edit/main/Eventos%20Programados/src/CabecalhoNota/readme.md">Envio de XML</a></td>
+<td style="text-align:left"><a href="https://github.com/EDUARDO-TEIXEIRA/Personalizacao-CIVITT/tree/main/Eventos%20Programados/src/CabecalhoNota">Envio de XML</a></td>
 <td style="text-align:left">Ao realizar o envio da NF-e a SEFAZ o sistema dispara um evento de transmissão do XML a plataforma da Lincros.</td>
 </tr>
 
