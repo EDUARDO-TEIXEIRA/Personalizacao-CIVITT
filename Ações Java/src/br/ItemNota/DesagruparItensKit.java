@@ -15,7 +15,7 @@ import br.com.sankhya.modelcore.util.DynamicEntityNames;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 
 public class DesagruparItensKit implements AcaoRotinaJava {
-
+	BigDecimal codProdKit;
 	@Override
 	public void doAction(ContextoAcao contexto) throws Exception {
 		Registro[] itens = contexto.getLinhas();
@@ -39,6 +39,8 @@ public class DesagruparItensKit implements AcaoRotinaJava {
 							new BigDecimal(produtoSelecionado.getCampo("SEQUENCIA").toString()));
 					
 					for (DynamicVO buscaKitItem : itemKitVo) {
+						codProdKit = new BigDecimal(produtoSelecionado.getCampo("CODPROD").toString());
+						
 						ajusteItemKit(buscaKitItem);
 						excluirKit(produtoSelecionado);
 						//excluirItensKit(buscaKitItem);
@@ -67,7 +69,6 @@ public class DesagruparItensKit implements AcaoRotinaJava {
 
 		return (Collection<DynamicVO>) filtroItemVO;
 	}
-
 	public void ajusteItemKit(DynamicVO itemVo) throws Exception {
 		EntityFacade dwf = EntityFacadeFactory.getDWFFacade();
 		FinderWrapper filtroItem = new FinderWrapper(DynamicEntityNames.ITEM_NOTA, "this.NUNOTA = ? AND this.SEQUENCIA = ?", new Object[] {itemVo.asBigDecimal("NUNOTA"), itemVo.asBigDecimal("SEQUENCIA")});
@@ -83,6 +84,8 @@ public class DesagruparItensKit implements AcaoRotinaJava {
 	    		dyitemVO.setProperty("QTDFORMULA", null);
 	    		dyitemVO.setProperty("ATUALESTTERC", "N");
 	    		dyitemVO.setProperty("TERCEIROS", "N");
+	    		dyitemVO.setProperty("AD_CODCOMBO", codProdKit);
+	    		
 	    		linha.setValueObject((EntityVO) dyitemVO);		
 	    	}
 	}
