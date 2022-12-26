@@ -7,6 +7,7 @@ import br.com.sankhya.extensions.actionbutton.AcaoRotinaJava;
 import br.com.sankhya.extensions.actionbutton.ContextoAcao;
 import br.com.sankhya.extensions.actionbutton.Registro;
 import br.com.sankhya.jape.EntityFacade;
+import br.com.sankhya.jape.bmp.PersistentLocalEntity;
 import br.com.sankhya.jape.util.FinderWrapper;
 import br.com.sankhya.jape.vo.DynamicVO;
 import br.com.sankhya.jape.vo.EntityVO;
@@ -33,17 +34,15 @@ public class DesagruparItensKit implements AcaoRotinaJava {
 
 				if (produtoSelecionado.getCampo("CODVOL").equals("KT")) {
 					// Método busca os itens do Kit
-					// obterIntensKit(itens);
-					
 					Collection<DynamicVO> itemKitVo = getItensComponsicaoKit(
 							new BigDecimal(produtoSelecionado.getCampo("NUNOTA").toString()),
 							new BigDecimal(produtoSelecionado.getCampo("SEQUENCIA").toString()));
 					
-					
 					for (DynamicVO buscaKitItem : itemKitVo) {
+						ajusteItemKit(buscaKitItem);
 						excluirKit(produtoSelecionado);
-						excluirItensKit(buscaKitItem);
-						inserirItem(buscaKitItem);
+						//excluirItensKit(buscaKitItem);
+							
 					}
 
 				} else {
@@ -51,9 +50,7 @@ public class DesagruparItensKit implements AcaoRotinaJava {
 							produtoSelecionado.getCampo("CODPROD").toString());
 					throw new Exception(mensagem);
 				}
-			}
-			CabecalhoNotaUtil.calcularImposto(nunota);
-			
+			}			
 			contexto.setMensagemRetorno("Operação finalizada com sucesso!");
 		}
 	}
@@ -71,16 +68,23 @@ public class DesagruparItensKit implements AcaoRotinaJava {
 		return (Collection<DynamicVO>) filtroItemVO;
 	}
 
-	public void inserirItem(DynamicVO itemVo) throws Exception {
+	public void ajusteItemKit(DynamicVO itemVo) throws Exception {
 		EntityFacade dwf = EntityFacadeFactory.getDWFFacade();
-		DynamicVO lineItemVo = itemVo.buildClone();
-		lineItemVo.setProperty("SEQUENCIA", null);
-		lineItemVo.setProperty("USOPROD", "R");
-		lineItemVo.setProperty("QTDFORMULA", null);
-		lineItemVo.setProperty("ATUALESTTERC", "N");
-		lineItemVo.setProperty("TERCEIROS", "N");
-		dwf.createEntity(DynamicEntityNames.ITEM_NOTA, (EntityVO) lineItemVo);
-
+		FinderWrapper filtroItem = new FinderWrapper(DynamicEntityNames.ITEM_NOTA, "this.NUNOTA = ? AND this.SEQUENCIA = ?", new Object[] {itemVo.asBigDecimal("NUNOTA"), itemVo.asBigDecimal("SEQUENCIA")});
+		Collection<PersistentLocalEntity> finderFinanceiroCPLE = dwf.findByDynamicFinder(filtroItem);
+    	
+			for (PersistentLocalEntity linha  : finderFinanceiroCPLE) 
+	    	{	
+				EntityVO finderItemEVO = linha.getValueObject();
+	    		DynamicVO dyitemVO = (DynamicVO) finderItemEVO;
+	    		
+	    		dyitemVO.setProperty("SEQUENCIA", itemVo.asBigDecimal("SEQUENCIA"));
+	    		dyitemVO.setProperty("USOPROD", "R");
+	    		dyitemVO.setProperty("QTDFORMULA", null);
+	    		dyitemVO.setProperty("ATUALESTTERC", "N");
+	    		dyitemVO.setProperty("TERCEIROS", "N");
+	    		linha.setValueObject((EntityVO) dyitemVO);		
+	    	}
 	}
 
 	public void excluirItensKit(DynamicVO itemVo) throws Exception {
