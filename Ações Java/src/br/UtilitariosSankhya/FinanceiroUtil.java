@@ -1,6 +1,13 @@
 package br.UtilitariosSankhya;
 
 import java.math.BigDecimal;
+import java.util.Base64;
+import java.util.Collection;
+
+import br.com.sankhya.jape.util.FinderWrapper;
+import br.com.sankhya.jape.vo.DynamicVO;
+import br.com.sankhya.modelcore.util.DynamicEntityNames;
+import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 
 public class FinanceiroUtil {
 	private BigDecimal nuNota;
@@ -44,5 +51,14 @@ public class FinanceiroUtil {
 	}
 	public void setValorDesdobramento(BigDecimal valorDesdobramento) {
 		this.valorDesdobramento = valorDesdobramento;
+	}
+	public static Collection<DynamicVO> getLinhaFinanceiro (BigDecimal nunota) throws Exception {
+		
+		Collection<DynamicVO> filtroTitulos = (Collection<DynamicVO>) 
+				EntityFacadeFactory.getDWFFacade().findByDynamicFinderAsVO(
+				new FinderWrapper(DynamicEntityNames.FINANCEIRO, "this.NUNOTA = ? ", new Object[] {nunota}));
+		
+		return filtroTitulos;
+		
 	}
 }

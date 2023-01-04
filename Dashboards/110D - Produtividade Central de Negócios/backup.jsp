@@ -365,11 +365,6 @@
                       <link
                           href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,200;0,400;0,600;1,200;1,400;1,600&display=swap"
                           rel="stylesheet"/>
-                          <script type="text/javascript">
-                            function openCardVendas() {
-                              openLevel('lvl_7w1gpk');
-                            }
-                          </script>
                     </head>
                     <body>
                        <h4>
@@ -393,7 +388,7 @@
                         <h3><span style="margin-top: 2px">Vendas</span></h3>
                         <p>
                             <c:forEach items="${vendas.rows}" var="row">
-                              ${row.VALOR}
+                                ${row.VALOR}
                             </c:forEach>
 
                         </p>

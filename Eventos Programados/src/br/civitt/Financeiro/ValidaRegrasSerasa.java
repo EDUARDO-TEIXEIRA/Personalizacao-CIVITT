@@ -25,7 +25,9 @@ public class ValidaRegrasSerasa implements EventoProgramavelJava {
 		
 		if ((modFields.isModifing("NURENEG") && modFields.getNewValue("NURENEG") != null)) {
 			if (finVO.getProperty("AD_SERASA") != null) {
-				throw new Exception("Títulos negativados ao Serasa não podem ser renegociados.");
+				if (finVO.getProperty("AD_SERASA").equals("S")) {
+					throw new Exception("Títulos negativados ao Serasa não podem ser renegociados.");
+				}
 			}
 		}
 	}

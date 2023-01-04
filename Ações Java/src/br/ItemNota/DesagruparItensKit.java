@@ -2,6 +2,7 @@ package br.ItemNota;
 
 import java.math.BigDecimal;
 import java.util.Collection;
+
 import br.UtilitariosSankhya.CabecalhoNotaUtil;
 import br.com.sankhya.extensions.actionbutton.AcaoRotinaJava;
 import br.com.sankhya.extensions.actionbutton.ContextoAcao;
@@ -43,8 +44,7 @@ public class DesagruparItensKit implements AcaoRotinaJava {
 						
 						ajusteItemKit(buscaKitItem);
 						excluirKit(produtoSelecionado);
-						//excluirItensKit(buscaKitItem);
-							
+						//excluirItensKit(buscaKitItem);							
 					}
 
 				} else {
@@ -52,7 +52,8 @@ public class DesagruparItensKit implements AcaoRotinaJava {
 							produtoSelecionado.getCampo("CODPROD").toString());
 					throw new Exception(mensagem);
 				}
-			}			
+			}
+			CabecalhoNotaUtil.calcularImposto(nunota);
 			contexto.setMensagemRetorno("Operação finalizada com sucesso!");
 		}
 	}

@@ -108,9 +108,8 @@ public class CabecalhoNotaUtil {
 		helpper.forcaRecalculoBaseISS(true);
 		helpper.calcularImpostos(nunota);
 		helpper.carregarNota(nunota);
-		helpper.calcularPIS();
-		helpper.calcularCOFINS();
-		
+		//helpper.calcularPIS();
+		//helpper.calcularCOFINS();
 	}
 	
 }

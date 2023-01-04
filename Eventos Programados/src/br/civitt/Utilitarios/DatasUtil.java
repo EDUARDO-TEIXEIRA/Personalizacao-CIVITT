@@ -21,4 +21,8 @@ public class DatasUtil {
         
         return  difHoras + ":" + diffMinutes + ":" + diffSeconds;
     }
+ public String addDiasData (java.util.Date date) {
+	 
+	 return "";
+ }
 }
