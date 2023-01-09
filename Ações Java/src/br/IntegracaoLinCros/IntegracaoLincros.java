@@ -7,19 +7,12 @@ import java.math.BigDecimal;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.sql.ResultSet;
-import java.text.SimpleDateFormat;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.StringTokenizer;
 
+import java.util.Collection;
 import org.json.JSONArray;
 import org.json.JSONObject;
-
 import com.sankhya.util.TimeUtils;
-
 import br.UtilitariosSankhya.ParceiroUtil;
-import br.com.sankhya.extensions.actionbutton.Registro;
 import br.com.sankhya.jape.EntityFacade;
 import br.com.sankhya.jape.bmp.PersistentLocalEntity;
 import br.com.sankhya.jape.dao.JdbcWrapper;
