@@ -20,10 +20,12 @@
                                   COUNT(CASE WHEN STATUS_SITUACAO = 'Não cumpriu' THEN 1 END) NAO_CUMPRIU,
                                   COUNT(CASE WHEN STATUS_SITUACAO = 'Aguardando Agendamento' THEN 1 END) AG_AGENDAMENTO,
                                   COUNT(CASE WHEN STATUS_SITUACAO = 'Não Classificado' THEN 1 END) NAO_CLASSIFICADO
-                             FROM (SELECT CASE WHEN TRUNC(DHPROXCHAM) > TRUNC(DHCHAMADA) THEN 'Fora do Prazo' 
-                                               WHEN TRUNC(DHCHAMADA) >= TRUNC(DHPROXCHAM) THEN 'No Prazo'
-                                               WHEN TRUNC(DHPROXCHAM) < TRUNC(SYSDATE) AND TRUNC(DHPROXCHAM) IS NULL THEN 'Não cumpriu'
-                                               WHEN TRUNC(DHPROXCHAM) > TRUNC(DHCHAMADA) THEN 'Aguardando Agendamento'
+                             FROM (SELECT CASE WHEN TRUNC(DHPROXCHAM) < TRUNC(AD_DTCHAMADA) THEN 'Fora do Prazo' 
+                                               WHEN TRUNC(DHPROXCHAM) >= TRUNC(AD_DTCHAMADA) OR 
+                                                    (AD_DTCHAMADA IS NOT NULL AND DHPROXCHAM IS NULL) OR 
+                                                    (TRUNC(DHPROXCHAM) >= TRUNC(SYSDATE))  THEN 'No Prazo'
+                                               WHEN TRUNC(DHPROXCHAM) < TRUNC(SYSDATE) AND TRUNC(AD_DTCHAMADA) IS NULL THEN 'Não cumpriu'
+                                               WHEN TRUNC(DHPROXCHAM) IS NULL AND TRUNC(AD_DTCHAMADA) IS NULL THEN 'Aguardando Agendamento'
                                                ELSE 'Não Classificado'
                                            END AS STATUS_SITUACAO
                                           FROM TGFTEL TEL

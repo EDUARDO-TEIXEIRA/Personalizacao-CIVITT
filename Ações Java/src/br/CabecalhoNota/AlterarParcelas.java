@@ -33,16 +33,13 @@ public class AlterarParcelas implements AcaoRotinaJava {
 		boolean confirmacao = contexto.confirmarSimNao("Deseja continuar", "O financeiro será recalculado", 1);
 		if (confirmacao) {
 			int qtdParcelas = (int) contexto.getParam("QTDPARCELAS");
-			int prazo = (int) contexto.getParam("PRAZO");
 			for (Registro linha : registro) {
 				excluirParcelasFinanceiro((BigDecimal) linha.getCampo("NUNOTA"));
-				gerarParcelasFinanceiro(linha, getTipoOperacao(linha), getParcelasTipoNegociacao(linha), qtdParcelas,
-						prazo);
+				gerarParcelasFinanceiro(linha, getTipoOperacao(linha), getParcelasTipoNegociacao(linha), qtdParcelas);
 			}
 		}
 		contexto.setMensagemRetorno("Financeiro atualizado");
 	}
-
 	public void excluirParcelasFinanceiro(Object nunota) throws Exception {
 		EntityFacade dwf = EntityFacadeFactory.getDWFFacade();
 		JdbcWrapper jdbc = dwf.getJdbcWrapper();
@@ -60,7 +57,18 @@ public class AlterarParcelas implements AcaoRotinaJava {
 
 		}
 	}
+	public int getPrazoMedio(DynamicVO tpvVO) throws Exception {
+		int prazoMedio = 1;
+		Collection<DynamicVO> registros = (Collection<DynamicVO>) EntityFacadeFactory.getDWFFacade()
+				.findByDynamicFinderAsVO(
+						new FinderWrapper("TipoNegociacao", "this.CODTIPVENDA = ? AND ROWNUM = 1 ORDER BY DHALTER DESC ",
+								new Object[] { tpvVO.asBigDecimal("CODTIPVENDA") }));
 
+		for (DynamicVO linha : registros) {
+			prazoMedio = linha.asInt("AD_PRAZOMEDIO");
+		}		
+		return prazoMedio;
+	}
 	public DynamicVO getParcelasTipoNegociacao(Registro cabVo) throws Exception {
 		DynamicVO registro = null;
 		Collection<DynamicVO> registros = (Collection<DynamicVO>) EntityFacadeFactory.getDWFFacade()
@@ -92,7 +100,7 @@ public class AlterarParcelas implements AcaoRotinaJava {
 		return registro;
 	}
 
-	public void gerarParcelasFinanceiro(Registro cabVo, DynamicVO topVo, DynamicVO tpvVO, int qtdParcelas, int prazo)
+	public void gerarParcelasFinanceiro(Registro cabVo, DynamicVO topVo, DynamicVO tpvVO, int qtdParcelas)
 			throws Exception {
 		JdbcWrapper jdbc = null;
 		SessionHandle hnd = null;
@@ -112,12 +120,13 @@ public class AlterarParcelas implements AcaoRotinaJava {
 			}
 
 			BigDecimal vlrTot = BigDecimal.ZERO;
+			int prazoMedio = getPrazoMedio(tpvVO);
 			for (int i = 1; i <= qtdParcelas; i++) {
 				finVo.setProperty("CODEMP", (BigDecimal) cabVo.getCampo("CODEMP"));
 				finVo.setProperty("NUFIN", null);
 				finVo.setProperty("DTNEG", (Timestamp) cabVo.getCampo("DTNEG"));
 				finVo.setProperty("NUNOTA", (BigDecimal) cabVo.getCampo("NUNOTA"));
-				finVo.setProperty("DTVENC", TimeUtils.dataAddDay((Timestamp) cabVo.getCampo("DTNEG"), i * prazo));
+				finVo.setProperty("DTVENC", TimeUtils.dataAddDay((Timestamp) cabVo.getCampo("DTNEG"), i * prazoMedio));
 				finVo.setProperty("CODPARC", (BigDecimal) cabVo.getCampo("CODPARC"));
 				finVo.setProperty("NUMNOTA", (BigDecimal) cabVo.getCampo("NUMNOTA"));
 				finVo.setProperty("DESDOBRAMENTO", Integer.toString(i));
@@ -156,15 +165,4 @@ public class AlterarParcelas implements AcaoRotinaJava {
 		}
 
 	}
-
-	public String addDiasData(java.util.Date date, int qtddias) {
-		Date dt = new Date();
-		Calendar dtInicio = new GregorianCalendar();
-		dtInicio.setTime(date);
-		dtInicio.add(Calendar.DATE, qtddias);
-		dt = dtInicio.getTime();
-
-		return "";
-	}
-
 }
