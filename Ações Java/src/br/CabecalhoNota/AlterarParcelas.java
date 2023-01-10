@@ -61,7 +61,7 @@ public class AlterarParcelas implements AcaoRotinaJava {
 		int prazoMedio = 1;
 		Collection<DynamicVO> registros = (Collection<DynamicVO>) EntityFacadeFactory.getDWFFacade()
 				.findByDynamicFinderAsVO(
-						new FinderWrapper("TipoNegociacao", "this.CODTIPVENDA = ? AND ROWNUM = 1 ORDER BY DHALTER DESC ",
+						new FinderWrapper("TipoNegociacao", "this.CODTIPVENDA = ?",
 								new Object[] { tpvVO.asBigDecimal("CODTIPVENDA") }));
 
 		for (DynamicVO linha : registros) {
